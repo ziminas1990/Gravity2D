@@ -1,0 +1,65 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".SceneEditorActivity" >
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal" >
+
+        <Button
+            android:id="@+id/editorBtnPlanet"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/editorBtnPlanet"
+            android:textSize="6pt" />
+
+        <Button
+            android:id="@+id/editorBtnTarget"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/editorBtnTarget"
+            android:textSize="6pt" />
+
+        <Button
+            android:id="@+id/editorBtnLauncher"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/editorBtnLauncher"
+            android:textSize="6pt" />
+        
+        <Button
+            android:id="@+id/editorBtnApply"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/editorBtnApply"
+            android:textSize="6pt" />
+
+        <Button
+            android:id="@+id/editorBtnCancel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/editorBtnCancel"
+            android:textSize="6pt" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical" >
+
+        <TextView
+            android:id="@+id/editorLblStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+        <com.example.gravity2d.Activities.SceneEditorClasses.EditingViewer
+            android:id="@+id/editorViewer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+    </LinearLayout>
+
+</LinearLayout>

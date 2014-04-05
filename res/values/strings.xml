@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">Gravity2D</string>
+    <string name="action_settings">Settings</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="title_activity_test_scene">TestSceneActivity</string>
+    <string name="title_activity_scenes_list">Gravity2D</string>
+    <string name="title_activity_easy_view">Просмотр сцен</string>
+    <string name="title_activity_scene_editor">Редактор сцен</string>
+    <string name="title_activity_playing">Запуск</string>
+
+    <!-- Элементы из SceneActivity -->
+    <string name="editorBtnPlanet">Planet</string>
+    <string name="editorBtnTarget">Target</string>
+    <string name="editorBtnLauncher">Launcher</string>
+    <string name="editorBtnCancel">Cancel</string>
+    <string name="editorBtnApply">Apply!</string>
+
+    <!-- Элементы из PlayActivity -->
+    <string name="playBtnStart">Start!</string>
+    <string name="playBtnStop">Stop</string>
+
+</resources>

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.gravity2d"
+    android:versionCode="1"
+    android:versionName="1.0" >
+
+    <uses-sdk
+        android:minSdkVersion="14"
+        android:targetSdkVersion="19" />
+
+    <application
+        android:debuggable="true"
+        android:allowBackup="true"
+        android:icon="@drawable/ic_launcher"
+        android:label="@string/app_name"
+        android:theme="@style/AppTheme" >
+        <activity
+            android:name="com.example.gravity2d.Activities.ScenesListActivity"
+            android:label="@string/title_activity_scenes_list" >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name="com.example.gravity2d.Activities.EasyViewActivity"
+            android:label="@string/title_activity_easy_view" >
+        </activity>
+        <activity
+            android:name="com.example.gravity2d.Activities.SceneEditorActivity"
+            android:label="@string/title_activity_scene_editor" >
+        </activity>
+        <activity
+            android:name="com.example.gravity2d.Activities.PlayingActivity"
+            android:label="@string/title_activity_playing" >
+        </activity>
+    </application>
+
+</manifest>
