@@ -143,10 +143,27 @@ public class PlayingActivity extends Activity
         return new String("Debug: wtf?!");
     }
 
+
+    /**
+     * Проверяет, не столкнулся ли объект с планетой
+     * @return Возвращает true, если объект столкнулся с планетой
+     */
+    private boolean checkForCrash() {
+        Coordinate position = mLaunchedObject.Position();
+        for(ModelPlanet planet : mScene.getAllPlanets()) {
+            double dx = planet.Position().x() - position.x();
+            double dy = planet.Position().y() - position.y();
+            double r = planet.Radius();
+            if(dx < r && dy < r && dx*dx + dy*dy < r * r)
+                return true;
+        }
+        return false;
+    }
+
     private void onLaunching() {
         // Красота да и только! :)
-        final int interval = 10;
-        final int timeWrap = 100;
+        final int interval = 25;
+        final int timeWrap = 300;
         mLaunchedObject.Position().setPosition(mScene.getLaunchPoint());
         mLaunchedObject.Velocity().setPosition(mMachine.getLaunchVelocity());
         mPhxEvent = new TimerTask() {
@@ -154,6 +171,8 @@ public class PlayingActivity extends Activity
             public void run() {
                 mPhxEngine.SimulationCircle(interval * timeWrap);
                 mMachine.onPositionUpdate(mLaunchedObject.Position());
+                if(checkForCrash())
+                    mMachine.onFinished();
             }
         };
         mPhxTimer.schedule(mPhxEvent, 500, interval);

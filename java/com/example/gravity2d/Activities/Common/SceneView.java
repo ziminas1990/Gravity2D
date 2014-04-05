@@ -64,10 +64,10 @@ public class SceneView extends View {
 	 */
 	@Override
 	protected void onSizeChanged(int w, int h, int oldw, int oldh) {
-		double ratio = h/w;
+		double ratio = (double)h/(double)w;
 		// Находим высоты и ширину области отсечения
-		double logW = Math.sqrt(mS * ratio);
-		double logH = Math.sqrt(mS / ratio);
+		double logW = Math.sqrt(mS / ratio);
+		double logH = Math.sqrt(mS * ratio);
 		
 		Coordinate logicGrid[] = mConverter.getLogicGrid();
 		Coordinate phxGrid[] = mConverter.getPhxGrid();
