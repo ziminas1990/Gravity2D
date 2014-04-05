@@ -42,12 +42,5 @@ public class KinematicsObject {
     }
 	
 	public Coordinate Velocity() { return mVelocity; }
-	public void setVelocity(Coordinate velocity) {
-        mVelocity = (velocity != null) ? velocity : new Coordinate();
-    }
-	
 	public Coordinate Acceleration() { return mAcceleration; }
-	public void setAcceleration(Coordinate accel) {
-        mAcceleration = (accel != null) ? accel : new Coordinate();
-    }
 }

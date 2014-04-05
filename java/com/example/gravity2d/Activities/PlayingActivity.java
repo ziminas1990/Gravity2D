@@ -150,8 +150,8 @@ public class PlayingActivity extends Activity
         // Красота да и только! :)
         final int interval = 10;
         final int timeWrap = 100;
-        mLaunchedObject.setPosition(new Coordinate(mScene.getLaunchPoint()));
-        mLaunchedObject.setVelocity(new Coordinate(mMachine.getLaunchVelocity()));
+        mLaunchedObject.Position().setPosition(mScene.getLaunchPoint());
+        mLaunchedObject.Velocity().setPosition(mMachine.getLaunchVelocity());
         mPhxEvent = new TimerTask() {
             @Override
             public void run() {

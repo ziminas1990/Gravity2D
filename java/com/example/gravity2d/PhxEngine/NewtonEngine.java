@@ -31,7 +31,7 @@ public class NewtonEngine extends KinematicsEngine
 			if(object == null || object.isStatic() == true)
 				continue;
 			findAccelerationForObject(object, acceleration);
-			object.setAcceleration(acceleration);
+			object.Acceleration().setPosition(acceleration);
 		}
 		
 		super.SimulationCircle(interval);
