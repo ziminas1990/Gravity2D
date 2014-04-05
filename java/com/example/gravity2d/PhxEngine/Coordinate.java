@@ -70,4 +70,6 @@ public class Coordinate {
 		double diffY = b.mY - a.mY;
 		return Math.sqrt(diffX * diffX + diffY * diffY);
 	}
+
+
 }

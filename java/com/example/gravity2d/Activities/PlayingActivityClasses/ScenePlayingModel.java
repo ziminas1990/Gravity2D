@@ -5,6 +5,7 @@ import com.example.gravity2d.Activities.Common.StateMachineClient;
 import com.example.gravity2d.ModelObjects.SceneModel;
 import com.example.gravity2d.PhxEngine.Coordinate;
 
+import java.util.HashMap;
 import java.util.Vector;
 
 /**
@@ -13,13 +14,20 @@ import java.util.Vector;
 public class ScenePlayingModel extends SceneModel
                                implements StateMachineClient {
 
+    // Идентификатор  траектория текущего запуска
+    private Integer mCurrentLaunchId;
     private Vector<Coordinate> mCurrentLaunch;
-    private Vector<Vector<Coordinate>> mPreviousLaunches;
+    // Идентификатор, который будет присвоен следующему запуску
+    private Integer mNextLaunchId;
+    // Карта для сопоставления идентификаторов с траекториями запусков
+    private HashMap<Integer, Vector<Coordinate>> mLaunches;
     private PlayingMachine mMachine;
 
     private void initData() {
-        mCurrentLaunch = new Vector<Coordinate>();
-        mPreviousLaunches = new Vector<Vector<Coordinate>>();
+        mCurrentLaunchId = 0;
+        mCurrentLaunch = null;
+        mNextLaunchId = 1;
+        mLaunches = new HashMap<Integer, Vector<Coordinate>>();
         mMachine = null;
     }
 
@@ -33,37 +41,30 @@ public class ScenePlayingModel extends SceneModel
     }
 
     /**
-     * Функцию необходимо вызывать тогда, когда пользователь запросил новый запуск. В этом случае,
-     * последний запуск записывается в историю и создаётся новый запуск
-     * @return Функция возвращает ссылку на текущий (новый) запуск, аналогично getCurrentLaunch
+     * Функция для получения траектории некоторого запуска
+     * @param id Идентификатор запуска, траектория которого запрашивается
+     * @return Возвращает траекторию запуска, либо null, если запуска id не существует
      */
-    public Vector<Coordinate> onNewLaunchStarted() {
-        mPreviousLaunches.addElement(mCurrentLaunch);
-        mCurrentLaunch = new Vector<Coordinate>();
-        return mCurrentLaunch;
+    public Vector<Coordinate> getTrajectory(Integer id) {
+        return mLaunches.get(id);
     }
+
+    /**
+     * @return Возвращает идентификатор текущего запуска
+     */
+    public Integer getCurrentLaunch() { return mCurrentLaunchId; }
 
     /**
      * @return Возвращает траекторию текущего запуска
      */
-    public Vector<Coordinate> getCurrentLaunch() { return  mCurrentLaunch; }
-
-    /**
-     * Функция для получения траектории одного из прошлых запусков
-     * @param index Порядковый номер запуска (0 - самый первый запуск)
-     * @return Возвращает траекторию запуска с порядковым номером index, либо null, если указанного
-     * запуска не существует
-     */
-    public Vector<Coordinate> getHistoricalLaunch(int index) {
-        if(index < mPreviousLaunches.size() && index > 0)
-            return mPreviousLaunches.get(index);
-        return null;
+    public Vector<Coordinate> getCurrentLaunchTrajectory() {
+        return mLaunches.get(mCurrentLaunchId);
     }
 
     /**
-     * @return Возвращает количество запусков, которые были сделаны до текущего
+     * @return Возвращает количество запусков, включая текущий
      */
-    public int getLaunchesCount() { return mPreviousLaunches.size(); }
+    public int getLaunchesCount() { return mLaunches.size(); }
 
     @Override //StateMachineClient
     public boolean onAttaching(AbstractStateMachine machine) {
@@ -80,19 +81,16 @@ public class ScenePlayingModel extends SceneModel
     public void onStateChanged(long oldState, long newState,
                                AbstractStateMachine machine)
     {
-        if(mMachine == null)
-            // Вряд ли такое возможно, но на всякий случай...
-            mMachine = (PlayingMachine)machine;
-
         if(newState == PlayingMachine.stateOnLaunched) {
             mCurrentLaunch = new Vector<Coordinate>();
+            mLaunches.put(mNextLaunchId, mCurrentLaunch);
+            mCurrentLaunchId = mNextLaunchId++;
         } else if(newState == PlayingMachine.stateOnPositionUpdate) {
-            mCurrentLaunch.add(new Coordinate(mMachine.getUpdatedPosition()));
+            if(mCurrentLaunch != null)
+                mCurrentLaunch.add(new Coordinate(mMachine.getUpdatedPosition()));
         } else if(newState == PlayingMachine.stateOnFinished) {
-            //Помещаем траекторию завершённого запуска в историю
-            if(mCurrentLaunch != null && mCurrentLaunch.size() != 0)
-                mPreviousLaunches.add(mCurrentLaunch);
+            mCurrentLaunch = null;
+            mCurrentLaunchId = 0;
         }
     }
-
 }

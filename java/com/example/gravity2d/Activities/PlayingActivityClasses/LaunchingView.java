@@ -13,6 +13,7 @@ import com.example.gravity2d.Activities.Common.StateMachineClient;
 import com.example.gravity2d.PhxEngine.Coordinate;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.Vector;
 
 /**
@@ -27,28 +28,31 @@ public class LaunchingView extends SceneView
     // пользователю. Грубо говоря - через сколько секунд запущенный объект достигнет на экране
     // конца вектора скорости при равномерном прямолинейном движении и при отсутствии ускорения
     // времени
-    static public double VelocityK = 3000;
+    static public double VelocityK = 6000;
 
     private PlayingMachine mMachine;
     private ScenePlayingModel mScene;
-    private int mCounter;
+    boolean isInvalidated;
 
     // Карта, сопоставляющая траектории в mScene с их вариантом, сконвертированным для
     // отображения в LaunchingView. Введена с целью оптимизации процесса отрисовки
-    private Map<Coordinate, Coordinate> mConvertedTrajectory;
+    private TrajectoryConverter mTrajectories;
+
+    private void init() {
+        mMachine = null;
+        mScene = null;
+        mTrajectories = new TrajectoryConverter(super.mConverter);
+        isInvalidated = true;
+    }
 
     public LaunchingView(Context context) {
         super(context);
-        mMachine = null;
-        mScene = null;
-        mCounter = 0;
+        init();
     }
 
     public LaunchingView(Context context, AttributeSet attrs) {
         super(context, attrs);
-        mMachine = null;
-        mScene = null;
-        mCounter = 0;
+        init();
     }
 
 
@@ -76,21 +80,25 @@ public class LaunchingView extends SceneView
     public void onStateChanged(long oldState, long newState,
                                AbstractStateMachine machine)
     {
-        // Счётчик mCounter нужен для того, чтобы отрисовывать изменения не при каждом перерасчёте
-        // позиции объекта, а каждые N перерасчётов. Например, если позиция объекта вычисляется
-        // 50 раз в секунду, то обновление кадра будет 50/N раз в секунду.
         if(newState == PlayingMachine.stateOnPositionUpdate) {
-            mCounter++;
-            if (mCounter == 20 /*N = 20*/) {
-                invalidate();
-                mCounter = 0;
+            Integer id = mScene.getCurrentLaunch();
+            if (id != 0) {
+                if(mTrajectories.trajectoryIsExist(id))
+                    mTrajectories.addPoint(id, mMachine.getUpdatedPosition());
+                else
+                    mTrajectories.addTrajectory(id, mScene.getCurrentLaunchTrajectory());
+
+                if(isInvalidated == true) {
+                    invalidate();
+                    isInvalidated = false;
+                }
             }
+
         } else if(newState == PlayingMachine.stateOnParamsUpdate) {
             invalidate();
 
         } else if(newState == PlayingMachine.stateOnFinished) {
             invalidate();
-            mCounter = 0;
         }
     }
 
@@ -143,29 +151,48 @@ public class LaunchingView extends SceneView
         // добавлении новых траекторий
         super.onDraw(canvas);
 
-        if(mScene == null)
+        if(mScene == null) {
+            isInvalidated = true;
             return;
+        }
 
-        // Отобразим предыдущие запуски
+        // Отобразим все траектории
         Paint paint = new Paint();
         paint.setStyle(Paint.Style.STROKE);
         paint.setStrokeWidth(5);
-        paint.setColor(Color.rgb(64, 0, 0));
+        paint.setColor(Color.rgb(255, 255, 0));
         canvas.drawPaint(paint);
-        long historySize = mScene.getLaunchesCount();
-        for(int i = 0; i <= historySize; i++) {
-            // Выбираем траекторию для отрисовки:
-            Vector<Coordinate> launch = null;
-            if(i < historySize) {
-                launch = mScene.getHistoricalLaunch(i);
-            } else if(i == historySize) {
-                //Текущий запуск:
-                launch = mScene.getCurrentLaunch();
-                paint.setColor(Color.rgb(255, 255, 0));
+
+        Vector<Coordinate> trajectory = null;
+        Coordinate prevPoint = null;
+
+        // Отрисовываем траекторию текущего запуска:
+        trajectory = mTrajectories.getConvertedTrajectory(mScene.getCurrentLaunch());
+        if(trajectory != null) {
+            for (Coordinate point : trajectory) {
+                if (prevPoint != null)
+                    canvas.drawLine((float) prevPoint.x(), (float) prevPoint.y(),
+                                    (float) point.x(), (float) point.y(), paint);
+                prevPoint = point;
             }
-            // Отрисовываем траекторию:
-            if(launch != null)
-                drawMultiLine(canvas, paint, launch);
+        }
+
+        // Отрисовываем траекторию предыдущих запусков
+        paint.setColor(Color.rgb(128, 128, 0));
+        Map<Integer, Vector<Coordinate>> allTrajectories =
+                mTrajectories.getAllConverterTrajectories();
+        for(Map.Entry<Integer, Vector<Coordinate>> entry : allTrajectories.entrySet()) {
+            Integer id = entry.getKey();
+            if(id.equals(mScene.getCurrentLaunch()))
+                continue;
+            trajectory = entry.getValue();
+            prevPoint = null;
+            for (Coordinate point : trajectory) {
+                if (prevPoint != null)
+                    canvas.drawLine((float) prevPoint.x(), (float) prevPoint.y(),
+                            (float) point.x(), (float) point.y(), paint);
+                prevPoint = point;
+            }
         }
 
         // Отобразим вектор скорости:
@@ -175,5 +202,7 @@ public class LaunchingView extends SceneView
             Coordinate start = mScene.getLaunchPoint();
             drawVector(canvas,paint, start, v, VelocityK);
         }
+
+        isInvalidated = true;
     }
 }
