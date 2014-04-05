@@ -17,7 +17,7 @@ public class StateMachine implements AbstractStateMachine {
 	// Клиенты машины
 	private HashMap<Long, StateMachineClient> mClientsMap;
 	private long mNextClientId;
-	
+
 	protected String tag;
 	
 	public StateMachine(long machineId) {
@@ -40,17 +40,25 @@ public class StateMachine implements AbstractStateMachine {
 	}
 	
 	@Override  // AbstractStateMachine
-	public boolean setState(long state) {
-		if(mOnStateChanging == true) {
-			Log.w(tag, "Unable to change state while changing state!");
-			return false;
-		}
-		long oldState = mState;
+	public synchronized boolean setState(long state) {
+        if(mOnStateChanging == true) {
+            Log.w(tag, "Unable to change state while changing state!");
+            return false;
+        }
+
+        long oldState = mState;
 		mState = state;
 		// Оповещаем всех клиентов о том, что состояние машины изменилось
 		mOnStateChanging = true;
-		for(StateMachineClient client : mClientsMap.values())
-			client.onStateChanged(oldState, mState, this);
+		for(StateMachineClient client : mClientsMap.values()) {
+            // Даже если какой-то из клиентов отработал неверно, всё-равно необходимо продолжить
+            // оповещение остальных клиентов
+            try {
+                client.onStateChanged(oldState, mState, this);
+            } catch (Exception exception) {
+                continue;
+            }
+        }
 		mOnStateChanging = false;
 		return true;
 	}

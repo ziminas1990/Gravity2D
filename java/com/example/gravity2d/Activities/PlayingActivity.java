@@ -40,8 +40,12 @@ public class PlayingActivity extends Activity
 
     private Timer mPhxTimer;
     private TimerTask mPhxEvent;
-    private Handler mHandler;
-    TextView mStatus;
+
+    private TextView mStatus;
+    private LaunchingView mViewer;
+
+    private Timer mGUIUpdateTimer;
+    private TimerTask mGUIUpdateEvent;
 
     private NewtonObject mLaunchedObject;
 
@@ -56,16 +60,6 @@ public class PlayingActivity extends Activity
         mMachine.attachClient(this);
         mMachine.reset();
 
-        mHandler = null;
-        mHandler = new Handler() {
-            @Override
-            public void handleMessage(Message msg) {
-                // Пока что предполагается только одно возможное сообщение от таймера,
-                // который занимается расчётом позиции запущенного объекта
-                mMachine.onPositionUpdate(mLaunchedObject.Position());
-            }
-        };
-
         // Загружаем сцену:
         mDbHelper = new DataBaseHelper(this);
         Intent intent = getIntent();
@@ -76,14 +70,17 @@ public class PlayingActivity extends Activity
         mDbHelper.loadScene(mScene);
         mMachine.attachClient(mScene);
 
-        LaunchingView viewer = (LaunchingView)findViewById(R.id.playViewer);
-        viewer.setScene(mScene);
+        mViewer = (LaunchingView)findViewById(R.id.playViewer);
+        mViewer.setScene(mScene);
 
         mPhxEngine = new NewtonEngine();
         mPhxTimer = new Timer();
         mPhxEvent = null;
         mLaunchedObject = new NewtonObject(1);
         loadSceneToPhxEngine(mScene);
+
+        mGUIUpdateTimer = new Timer();
+        mGUIUpdateEvent = null;
 
         bindActivityViewsWithMachine();
     }
@@ -156,22 +153,47 @@ public class PlayingActivity extends Activity
             @Override
             public void run() {
                 mPhxEngine.SimulationCircle(interval * timeWrap);
-                mHandler.sendMessage(mHandler.obtainMessage());
+                mMachine.onPositionUpdate(mLaunchedObject.Position());
             }
         };
         mPhxTimer.schedule(mPhxEvent, 500, interval);
+
+        // Запускаем обновление GUI (чтобы перерисовывать траектории по мере их расчёта)
+        mGUIUpdateEvent = new TimerTask() {
+            @Override
+            public void run() {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        mViewer.invalidate();
+                    }
+                });
+            }
+        };
+        mGUIUpdateTimer.schedule(mGUIUpdateEvent, 500, 100);
     }
 
 
     @Override // StateMachineClient
-    public void onStateChanged(long oldState, long newState,
+    public void onStateChanged(long oldState, final long newState,
                                AbstractStateMachine machine) {
-        mStatus.setText(stateAsString(newState));
+
+        if((newState != PlayingMachine.stateOnPositionUpdate ||
+           oldState != PlayingMachine.stateOnPositionUpdate)) {
+            this.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    mStatus.setText(stateAsString(newState));
+                }
+            });
+        }
+
         if(newState == PlayingMachine.stateOnLaunched) {
             // запускаем вычисление
             onLaunching();
         } else if (newState == PlayingMachine.stateOnFinished) {
             mPhxEvent.cancel();
+            mGUIUpdateEvent.cancel();
         }
     }
 }

@@ -25,20 +25,15 @@ public class PlayingMachine extends StateMachine {
     private Coordinate mCurrentPosition;
     private Coordinate mLauncherVector;
 
-    private void resetData() {
-        mCurrentPosition = null;
-        mLauncherVector = null;
-    }
-
     public PlayingMachine () {
         super(MACHINE_TYPE_ID);
         super.tag = "[PlayingMachine]";
         super.setState(stateDefault);
-        resetData();
+        mCurrentPosition = null;
+        mLauncherVector = null;
     }
 
     public void onPreparing() {
-        resetData();
         super.setState(statePreparation);
     }
 
@@ -47,7 +42,6 @@ public class PlayingMachine extends StateMachine {
      * @param launcherVector Вектор скорости
      */
     public void onParamsUpdate(Coordinate launcherVector) {
-        resetData();
         mLauncherVector = launcherVector;
         super.setState(stateOnParamsUpdate);
     }
@@ -56,7 +50,6 @@ public class PlayingMachine extends StateMachine {
      * Функция вызывается, когда пользователь запросил запуск
      */
     public void onLaunched(Coordinate launcherVector) {
-        resetData();
         mLauncherVector = launcherVector;
         super.setState(stateOnLaunched);
     }
@@ -94,7 +87,6 @@ public class PlayingMachine extends StateMachine {
      * Функция вызывается, когда расчёт траектории прекращается (например, столкновение с планетой)
      */
     public void onFinished() {
-        resetData();
         super.setState(stateOnFinished);
     }
 

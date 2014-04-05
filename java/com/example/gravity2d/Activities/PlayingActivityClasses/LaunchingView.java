@@ -28,7 +28,7 @@ public class LaunchingView extends SceneView
     // пользователю. Грубо говоря - через сколько секунд запущенный объект достигнет на экране
     // конца вектора скорости при равномерном прямолинейном движении и при отсутствии ускорения
     // времени
-    static public double VelocityK = 6000;
+    static public double VelocityK = 2000;
 
     private PlayingMachine mMachine;
     private ScenePlayingModel mScene;
@@ -87,11 +87,6 @@ public class LaunchingView extends SceneView
                     mTrajectories.addPoint(id, mMachine.getUpdatedPosition());
                 else
                     mTrajectories.addTrajectory(id, mScene.getCurrentLaunchTrajectory());
-
-                if(isInvalidated == true) {
-                    invalidate();
-                    isInvalidated = false;
-                }
             }
 
         } else if(newState == PlayingMachine.stateOnParamsUpdate) {
@@ -108,8 +103,8 @@ public class LaunchingView extends SceneView
             mMachine.getState() == PlayingMachine.stateOnParamsUpdate) {
 
             int action = event.getAction();
-            if (event.getAction() == MotionEvent.ACTION_DOWN ||
-                event.getAction() == MotionEvent.ACTION_MOVE) {
+            if (action == MotionEvent.ACTION_DOWN ||
+                action == MotionEvent.ACTION_MOVE) {
                 // Редактирование параметров запуска
                 return onParametersEditing(event);
             } else if (event.getAction() == MotionEvent.ACTION_UP) {
@@ -168,12 +163,15 @@ public class LaunchingView extends SceneView
 
         // Отрисовываем траекторию текущего запуска:
         trajectory = mTrajectories.getConvertedTrajectory(mScene.getCurrentLaunch());
-        if(trajectory != null) {
-            for (Coordinate point : trajectory) {
-                if (prevPoint != null)
-                    canvas.drawLine((float) prevPoint.x(), (float) prevPoint.y(),
-                                    (float) point.x(), (float) point.y(), paint);
-                prevPoint = point;
+
+        if (trajectory != null) {
+            synchronized (trajectory) {
+                for (Coordinate point : trajectory) {
+                    if (prevPoint != null)
+                        canvas.drawLine((float) prevPoint.x(), (float) prevPoint.y(),
+                                (float) point.x(), (float) point.y(), paint);
+                    prevPoint = point;
+                }
             }
         }
 
@@ -187,11 +185,13 @@ public class LaunchingView extends SceneView
                 continue;
             trajectory = entry.getValue();
             prevPoint = null;
-            for (Coordinate point : trajectory) {
-                if (prevPoint != null)
-                    canvas.drawLine((float) prevPoint.x(), (float) prevPoint.y(),
-                            (float) point.x(), (float) point.y(), paint);
-                prevPoint = point;
+            synchronized (trajectory) {
+                for (Coordinate point : trajectory) {
+                    if (prevPoint != null)
+                        canvas.drawLine((float) prevPoint.x(), (float) prevPoint.y(),
+                                (float) point.x(), (float) point.y(), paint);
+                    prevPoint = point;
+                }
             }
         }
 
