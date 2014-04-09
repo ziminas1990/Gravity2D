@@ -24,7 +24,7 @@ public class SceneEditorActivity extends Activity
 
 	public static String argSceneID = "SCENE_ID";
 	public static String argSceneName = "SCENE_NAME";
-	
+
 	private SceneEditMachine mStateMachine;
 	private SceneModel mScene;
 	private DataBaseHelper mDbHelper;
@@ -67,9 +67,20 @@ public class SceneEditorActivity extends Activity
 	}
 
     @Override
-    protected void onStop() {
+    protected void onDestroy() {
         super.onStop();
         mDbHelper.storeScene(mScene);
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle data) {
+        mStateMachine.saveToBundle(data, "mStateMachine.");
+    }
+
+    @Override
+    public void onRestoreInstanceState(Bundle data) {
+        mStateMachine.loadFromBundle(data, "mStateMachine.");
+        mStateMachine.notifyEverybodyAgain();
     }
 
 	// Связывает клики по кнопкам с обработчиками

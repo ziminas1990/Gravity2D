@@ -36,7 +36,7 @@ public class SceneListMachine extends StateMachine {
 	
 	public SceneListMachine() {
         super(MACHINE_TYPE_ID);
-        super.tag = "[PlayingMachine]";
+        super.mTag = "[PlayingMachine]";
         super.setState(stateStart);
 	}
 	

@@ -1,7 +1,11 @@
 package com.example.gravity2d.Activities.SceneEditorClasses;
 
 
+import android.os.Bundle;
+
 import com.example.gravity2d.Activities.Common.StateMachine;
+
+import java.util.Vector;
 
 /**
  * Класс реализует конечный автомат для управления процессом редактирования
@@ -18,7 +22,7 @@ public class SceneEditMachine extends StateMachine {
 	static public long stateEditTarget = 2;
 	static public long stateEditLauncher = 3;
 	static public long stateApply = 4;
-	
+
 	// Вложенные конечные автоматы для редактирования разных элементов
 	private PlanetEditMachine mPlanetMachine;
 	
@@ -26,10 +30,22 @@ public class SceneEditMachine extends StateMachine {
         super(MACHINE_TYPE_ID);
 		mPlanetMachine = new PlanetEditMachine();
 		
-		super.tag = "[EditorMachine]";
+		super.mTag = "[EditorMachine]";
 		super.setState(stateStart);
 	}
-	
+
+    @Override  // StateMachine
+    public void saveToBundle(Bundle data, String prefix) {
+        super.saveToBundle(data, prefix + "[StateMachine]");
+        mPlanetMachine.saveToBundle(data, prefix + "mPlanetMachine.");
+    }
+
+    @Override  // StateMachine
+    public void loadFromBundle(Bundle data, String prefix) {
+        super.loadFromBundle(data, prefix + "[StateMachine]");
+        mPlanetMachine.loadFromBundle(data, prefix + "mPlanetMachine.");
+    }
+
 	public PlanetEditMachine getPlanetMachine() {
 		return mPlanetMachine;
 	}

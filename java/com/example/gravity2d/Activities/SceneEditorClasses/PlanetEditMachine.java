@@ -1,5 +1,7 @@
 package com.example.gravity2d.Activities.SceneEditorClasses;
 
+import android.os.Bundle;
+
 import com.example.gravity2d.Activities.Common.StateMachine;
 import com.example.gravity2d.ModelObjects.ModelPlanet;
 import com.example.gravity2d.PhxEngine.Coordinate;
@@ -10,15 +12,28 @@ public class PlanetEditMachine extends StateMachine {
 	static public long stateRadius = 2;
 	
 	ModelPlanet mPlanet;
-	
+
+    static private String KEY_PLANET = "mPlanet";
+
 	public PlanetEditMachine() {
         super(MACHINE_TYPE_ID);
 
-        super.tag = "[PlanetEditMachine]";
+        super.mTag = "[PlanetEditMachine]";
 		setState(stateCenter);
 		mPlanet = null;
 	}
-	
+
+
+    public void saveToBundle(Bundle data, String prefix) {
+        super.saveToBundle(data, prefix + "[StateMachine]");
+        data.putSerializable(KEY_PLANET, mPlanet);
+    }
+
+    public void loadFromBundle(Bundle data, String prefix) {
+        super.loadFromBundle(data, prefix + "[StateMachine]");
+        mPlanet = (ModelPlanet)data.getSerializable(KEY_PLANET);
+    }
+
 	/**
 	 * Возвращает планету, которая редактируется пользователями конечного
 	 * автомата

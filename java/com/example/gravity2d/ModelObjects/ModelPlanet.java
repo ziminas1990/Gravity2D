@@ -3,6 +3,8 @@ package com.example.gravity2d.ModelObjects;
 import com.example.gravity2d.PhxEngine.NewtonObject;
 import com.example.gravity2d.PhxEngine.Coordinate;
 
+import java.io.Serializable;
+
 /**
  * Класс для описания планеты. Планета является физическим объектом (наследует
  * NewtonObject), дополняя его радиусом. В текущей реализации игры на планету не
@@ -10,7 +12,7 @@ import com.example.gravity2d.PhxEngine.Coordinate;
  * @author ZiminAS
  * @version 1.0
  */
-public class ModelPlanet extends NewtonObject {
+public class ModelPlanet extends NewtonObject implements Serializable {
 	private double mRadius;
 	public double Radius() { return mRadius; }
 	public void setRadius(double r) { mRadius = r; } 

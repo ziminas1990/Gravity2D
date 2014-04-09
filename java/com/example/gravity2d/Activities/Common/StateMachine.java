@@ -1,5 +1,7 @@
 package com.example.gravity2d.Activities.Common;
 import java.util.HashMap;
+
+import android.os.Bundle;
 import android.util.Log;
 
 /**
@@ -18,17 +20,42 @@ public class StateMachine implements AbstractStateMachine {
 	private HashMap<Long, StateMachineClient> mClientsMap;
 	private long mNextClientId;
 
-	protected String tag;
-	
-	public StateMachine(long machineId) {
+	protected String mTag;
+
+    // Строки для сохранения в Bundle
+    static private String KEY_STATE = "mState";
+    static private String KEY_MACHINE_ID = "mMachineId";
+    static private String KEY_TAG = "mTag";
+
+    public StateMachine(long machineId) {
 		mState = 0;
 		mOnStateChanging = false;
 		mNextClientId = 1;
 		mClientsMap = new HashMap<Long, StateMachineClient>();
-		tag = "[StateMachine]";
+		mTag = "[StateMachine]";
         mMachineId = machineId;
 	}
-	
+
+    /**
+     * Сохраняет состояние машины, чтобы его можно было восстановить
+     * @param data Объект, в которй необходимо сохранить состояние
+     */
+    public void saveToBundle(Bundle data, String prefix) {
+        data.putLong(prefix + KEY_STATE, mState);
+        data.putLong(prefix + KEY_MACHINE_ID, mMachineId);
+        data.putString(prefix + KEY_TAG, mTag);
+    }
+
+    /**
+     * Восстанавливает состояние машины
+     * @param data Объект, в которй было сохранено состояние машины
+     */
+    public void loadFromBundle(Bundle data, String prefix) {
+        mState = data.getLong(prefix + KEY_STATE);
+        mMachineId = data.getLong(prefix + KEY_MACHINE_ID);
+        mTag = data.getString(prefix + KEY_TAG);
+    }
+
 	@Override  // AbstractStateMachine
 	public long getType() {
 		return mMachineId;
@@ -38,19 +65,24 @@ public class StateMachine implements AbstractStateMachine {
 	public boolean reset() {
 		return true;
 	}
-	
-	@Override  // AbstractStateMachine
-	public synchronized boolean setState(long state) {
-        if(mOnStateChanging == true) {
-            Log.w(tag, "Unable to change state while changing state!");
-            return false;
-        }
 
-        long oldState = mState;
-		mState = state;
-		// Оповещаем всех клиентов о том, что состояние машины изменилось
-		mOnStateChanging = true;
-		for(StateMachineClient client : mClientsMap.values()) {
+    /**
+     * Вызов функции приводит к повторному оповещению всех клиентов о текущем состоянии машины,
+     * при этом в качестве прыдудещго состояния будет указано текущее состояние (так как
+     * изменения состояния не происходит)
+     */
+    public void notifyEverybodyAgain() {
+        notifyEverybody(mState, mState);
+    }
+
+    /**
+     * Функция производит оповещение всех клиентов о том, что состояние изменилось
+     * @param oldState Предыдущее состояние
+     * @param newState Новое состояние
+     */
+    private synchronized void notifyEverybody(long oldState, long newState) {
+        mOnStateChanging = true;
+        for(StateMachineClient client : mClientsMap.values()) {
             // Даже если какой-то из клиентов отработал неверно, всё-равно необходимо продолжить
             // оповещение остальных клиентов
             try {
@@ -59,7 +91,20 @@ public class StateMachine implements AbstractStateMachine {
                 continue;
             }
         }
-		mOnStateChanging = false;
+        mOnStateChanging = false;
+    }
+
+	@Override  // AbstractStateMachine
+	public synchronized boolean setState(long state) {
+        if(mOnStateChanging == true) {
+            Log.w(mTag, "Unable to change state while changing state!");
+            return false;
+        }
+
+        long oldState = mState;
+		mState = state;
+		// Оповещаем всех клиентов о том, что состояние машины изменилось
+		notifyEverybody(oldState, mState);
 		return true;
 	}
 	
@@ -70,7 +115,7 @@ public class StateMachine implements AbstractStateMachine {
 	public long attachClient(StateMachineClient client) {
 		if(!client.onAttaching(this)) {
 			// Клиент не согласен с подключением к машине!
-			Log.i(tag, "Client refused connection to machine!");
+			Log.i(mTag, "Client refused connection to machine!");
 			return 0;
 		}
 		long client_id = mNextClientId++;
@@ -82,7 +127,7 @@ public class StateMachine implements AbstractStateMachine {
 	public boolean deattachClient(long clientId) {
 		StateMachineClient client = mClientsMap.get(clientId);
 		if(client == null) {
-			Log.w(tag, "Client with id=" + clientId + " doesn't exist!");
+			Log.w(mTag, "Client with id=" + clientId + " doesn't exist!");
 			return false;
 		}
 		client.onDeattached(this);

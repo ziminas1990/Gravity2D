@@ -27,7 +27,7 @@ public class PlayingMachine extends StateMachine {
 
     public PlayingMachine () {
         super(MACHINE_TYPE_ID);
-        super.tag = "[PlayingMachine]";
+        super.mTag = "[PlayingMachine]";
         super.setState(stateDefault);
         mCurrentPosition = null;
         mLauncherVector = null;
