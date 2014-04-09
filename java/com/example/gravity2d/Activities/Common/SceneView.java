@@ -67,7 +67,7 @@ public class SceneView extends View {
 		double ratio = (double)h/(double)w;
 		// Находим высоты и ширину области отсечения
 		double logW = Math.sqrt(mS / ratio);
-		double logH = Math.sqrt(mS * ratio);
+		double logH = mS / logW;
 		
 		Coordinate logicGrid[] = mConverter.getLogicGrid();
 		Coordinate phxGrid[] = mConverter.getPhxGrid();
