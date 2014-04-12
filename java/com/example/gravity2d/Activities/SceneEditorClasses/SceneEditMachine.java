@@ -27,11 +27,16 @@ public class SceneEditMachine extends StateMachine
 
 	// Вложенные конечные автоматы для редактирования разных элементов
 	private PlanetEditMachine mPlanetMachine;
+    private TargetEditMachine mTargetMachine;
 	
 	public SceneEditMachine() {
         super(MACHINE_TYPE_ID);
 		mPlanetMachine = new PlanetEditMachine();
+        mPlanetMachine.reset();
 		mPlanetMachine.attachClient(this);
+        mTargetMachine = new TargetEditMachine();
+        mTargetMachine.reset();
+        mTargetMachine.attachClient(this);
 
 		super.mTag = "[EditorMachine]";
 		super.setState(stateStart);
@@ -52,7 +57,7 @@ public class SceneEditMachine extends StateMachine
     @Override //StateMachineClient
     public boolean onAttaching(AbstractStateMachine machine)
     {
-        return  machine == mPlanetMachine;
+        return machine == mPlanetMachine || machine == mTargetMachine;
     }
 
     @Override //StateMachineClient
@@ -68,20 +73,18 @@ public class SceneEditMachine extends StateMachine
 	public PlanetEditMachine getPlanetMachine() {
 		return mPlanetMachine;
 	}
-	
+
+    public TargetEditMachine getTargetMachine() { return mTargetMachine; }
+
 	@Override  // AbstractStateMachine
 	public boolean reset() {
-		return setState(stateStart);
+	    mPlanetMachine.reset();
+        mTargetMachine.reset();
+        return setState(stateStart);
 	}
 	
 	@Override  // StateMachine
-	public boolean setState(long state) {
-		if(state == stateEditPlanet)
-			if(mPlanetMachine.reset() != true)
-				return reset();
-		
-		return super.setState(state);
-	}
+	public boolean setState(long state) { return super.setState(state); }
 	
 	/**
 	 * @return Возвращает состояние автомата в виде строки

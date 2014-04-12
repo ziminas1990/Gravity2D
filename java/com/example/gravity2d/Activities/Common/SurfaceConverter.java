@@ -60,11 +60,11 @@ public class SurfaceConverter {
                 mPhxGrid[0].y() + dy * mQuotients[1]);
     }
 
-    public Coordinate convertToLogic(Coordinate phxPoint) {
+    public void convertToLogic(Coordinate phxPoint) {
         double dx = phxPoint.x() - mPhxGrid[0].x();
         double dy = phxPoint.y() - mPhxGrid[0].y();
-        return new Coordinate(mLogicGrid[0].x() + dx / mQuotients[0],
-                mLogicGrid[0].y() + dy / mQuotients[1]);
+        phxPoint.setPosition(mLogicGrid[0].x() + dx / mQuotients[0],
+                             mLogicGrid[0].y() + dy / mQuotients[1]);
     }
 
     public double convertToPhx(double metric) {

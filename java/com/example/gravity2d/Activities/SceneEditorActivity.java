@@ -3,7 +3,9 @@ package com.example.gravity2d.Activities;
 import com.example.gravity2d.Activities.Common.*;
 
 import com.example.gravity2d.Activities.SceneEditorClasses.PlanetEditMachine;
+import com.example.gravity2d.Activities.SceneEditorClasses.TargetEditMachine;
 import com.example.gravity2d.ModelObjects.ModelPlanet;
+import com.example.gravity2d.ModelObjects.ModelTarget;
 import com.example.gravity2d.R;
 import com.example.gravity2d.Activities.SceneEditorClasses.SceneEditMachine;
 import com.example.gravity2d.Activities.SceneEditorClasses.EditingViewer;
@@ -153,6 +155,11 @@ public class SceneEditorActivity extends Activity
         mScene.addPlanet(planet);
     }
 
+    private void onTargetApply(TargetEditMachine machine) {
+        ModelTarget target = machine.getTarget();
+        mScene.addTarget(target);
+    }
+
 	@Override
 	public void onStateChanged(long oldState, long newState,
                                AbstractStateMachine machine)
@@ -161,8 +168,11 @@ public class SceneEditorActivity extends Activity
 		// а так же блокировать/разблокировать кнопки
 		mTextStatus.setText(mStateMachine.getStateAsString());
 
-        if(newState == SceneEditMachine.stateApply)
-            if(oldState == SceneEditMachine.stateEditPlanet)
+        if(newState == SceneEditMachine.stateApply) {
+            if (oldState == SceneEditMachine.stateEditPlanet)
                 onPlanetApply(mStateMachine.getPlanetMachine());
+            else if(oldState == SceneEditMachine.stateEditTarget)
+                onTargetApply(mStateMachine.getTargetMachine());
+        }
 	}
 }

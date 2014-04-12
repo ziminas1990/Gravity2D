@@ -139,7 +139,7 @@ public class LaunchingView extends SceneView
      */
     private boolean onParametersEditing(MotionEvent event) {
         Coordinate touchPoint = new Coordinate(event.getX(), event.getY());
-        touchPoint = mConverter.convertToLogic(touchPoint);
+        mConverter.convertToLogic(touchPoint);
         Coordinate launchPoint = mScene.getLaunchPoint();
         // Находим скорость:
         Coordinate velocity = new Coordinate(0, 0);

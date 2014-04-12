@@ -2,27 +2,36 @@ package com.example.gravity2d.ModelObjects;
 
 import com.example.gravity2d.PhxEngine.Coordinate;
 
+import java.io.Serializable;
+
 /**
  * Класс для описание мишени, через которую должен пролететь объект. Мишень
  * представляет собой отрезок на плоскости (т.е. задаётся двумя точками)
  * @author ZiminAS
  * @version 1.0
  */
-public class ModelTarget {
+public class ModelTarget implements Serializable {
 	private Coordinate mFirstPoint;
 	private Coordinate mSecondPoint;
 	private double length;
 	private boolean mIsStruck;
-	
+
+    public ModelTarget() {
+        mFirstPoint = new Coordinate(0, 0);
+        mSecondPoint = new Coordinate(0, 0);
+        length = Coordinate.calculateLength(mFirstPoint, mSecondPoint);
+        mIsStruck = false;
+    }
+
 	public ModelTarget(Coordinate first, Coordinate second) {
 		mFirstPoint = first;
 		mSecondPoint = second;
-		length = Coordinate.calculateLength(first, second);
+		length = Coordinate.calculateLength(mFirstPoint, mSecondPoint);
 		mIsStruck = false;
 	}
 	
-	boolean isStrucked() { return mIsStruck; }
-	void setStruckState(boolean isStruck) { mIsStruck = isStruck; }
+	public boolean isStrucked() { return mIsStruck; }
+	public void setStruckState(boolean isStruck) { mIsStruck = isStruck; }
 	
 	public Coordinate FirstPoint() { return mFirstPoint; }
 	public Coordinate SecondPoint() { return mSecondPoint; }

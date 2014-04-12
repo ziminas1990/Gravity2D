@@ -104,7 +104,14 @@ public class SceneView extends View {
 	protected void DrawTarget(ModelTarget target, Canvas canvas, Paint paint) {
 		if(target == null)
 			return;
-        drawLine(canvas, paint, target.FirstPoint(), target.SecondPoint());
+        paint.setStrokeWidth(3);
+        paint.setColor((target.isStrucked()) ? Color.rgb(128, 0, 0) : Color.rgb(255, 0, 0));
+        Coordinate phxStart = mConverter.convertToPhx(target.FirstPoint());
+        Coordinate phxEnd = mConverter.convertToPhx( target.SecondPoint());
+        canvas.drawCircle((float)phxStart.x(), (float)phxStart.y(), 3, paint);
+        canvas.drawCircle((float)phxEnd.x(), (float)phxEnd.y(), 3, paint);
+        canvas.drawLine((float)phxStart.x(), (float)phxStart.y(),
+                        (float)phxEnd.x(), (float)phxEnd.y(), paint);
 	}
 	
 	/**
