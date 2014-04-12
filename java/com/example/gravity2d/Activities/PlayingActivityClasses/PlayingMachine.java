@@ -1,6 +1,9 @@
 package com.example.gravity2d.Activities.PlayingActivityClasses;
 
+import android.os.Bundle;
+
 import com.example.gravity2d.Activities.Common.StateMachine;
+import com.example.gravity2d.ModelObjects.ModelPlanet;
 import com.example.gravity2d.PhxEngine.Coordinate;
 
 /**
@@ -31,6 +34,20 @@ public class PlayingMachine extends StateMachine {
         super.setState(stateDefault);
         mCurrentPosition = null;
         mLauncherVector = null;
+    }
+
+    @Override
+    public void saveToBundle(Bundle data, String prefix) {
+        super.saveToBundle(data, prefix + "[StateMachine]");
+        data.putSerializable(prefix + "mCurrentPosition", mCurrentPosition);
+        data.putSerializable(prefix + "mLauncherVector", mLauncherVector);
+    }
+
+    @Override
+    public void loadFromBundle(Bundle data, String prefix) {
+        super.loadFromBundle(data, prefix + "[StateMachine]");
+        mCurrentPosition = (Coordinate)data.getSerializable(prefix + "mCurrentPosition");
+        mLauncherVector = (Coordinate)data.getSerializable(prefix + "mLauncherVector");
     }
 
     public void onPreparing() {

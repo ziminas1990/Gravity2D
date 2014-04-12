@@ -85,6 +85,43 @@ public class PlayingActivity extends Activity
         bindActivityViewsWithMachine();
     }
 
+    @Override
+    public void onSaveInstanceState(Bundle data) {
+        mScene.saveToBundle(data, "mScene.");
+        mViewer.saveToBundle(data, "mViewer.");
+        mMachine.saveToBundle(data, "mMachine.");
+        data.putSerializable("mLaunchedObject", mLaunchedObject);
+    }
+
+    @Override
+    public void onRestoreInstanceState(Bundle data) {
+        mScene.loadFromBundle(data, "mScene.");
+        mViewer.loadFromBundle(data, "mViewer.");
+        mMachine.loadFromBundle(data, "mMachine.");
+
+        //Подменяем запускаемый объект в физ. движке на тот, который использовался ранее:
+        mPhxEngine.removeObject(mLaunchedObject);
+        mLaunchedObject = (NewtonObject)data.getSerializable("mLaunchedObject");
+        mPhxEngine.addObject(mLaunchedObject);
+
+        if(mMachine.getState() != PlayingMachine.stateOnPositionUpdate) {
+            mMachine.notifyEverybodyAgain();
+        } else {
+            // Экран был повёрнут в процессе полёта объекта
+            runPhxEngineTimer();
+            runGuiUpdateTimer();
+        }
+    }
+
+    @Override
+    public void onDestroy() {
+        mPhxTimer.cancel();
+        mGUIUpdateTimer.cancel();
+        mPhxTimer.purge();
+        mGUIUpdateTimer.purge();
+        super.onDestroy();
+    }
+
     /**
      * Функция загружает сцену в физический движок
      * @param scene Сцена, объекты которой будут загружены в физический движок
@@ -160,24 +197,28 @@ public class PlayingActivity extends Activity
         return false;
     }
 
-    private void onLaunching() {
-        // Красота да и только! :)
-        final int interval = 25;
-        final int timeWrap = 300;
-        mLaunchedObject.Position().setPosition(mScene.getLaunchPoint());
-        mLaunchedObject.Velocity().setPosition(mMachine.getLaunchVelocity());
+    private void runPhxEngineTimer() {
+        final int interval = 50; // Как часто отрабатывает таймер
+        final int timeWrap = 300; // Ускорение времени относительно реального (должен ровно
+        // делиться на precision
+        final int precision = 5; // Эвристический коэфициент точности (чем больше, тем ниже
+                                 // точность и выше производительность)
         mPhxEvent = new TimerTask() {
             @Override
             public void run() {
-                mPhxEngine.SimulationCircle(interval * timeWrap);
+                int circles_count = timeWrap / precision;
+                int circle_interval = interval * precision;
+                for(int i = 0; i < circles_count; i++)
+                    mPhxEngine.SimulationCircle(circle_interval);
                 mMachine.onPositionUpdate(mLaunchedObject.Position());
                 if(checkForCrash())
                     mMachine.onFinished();
             }
         };
         mPhxTimer.schedule(mPhxEvent, 500, interval);
+    }
 
-        // Запускаем обновление GUI (чтобы перерисовывать траектории по мере их расчёта)
+    private void runGuiUpdateTimer() {
         mGUIUpdateEvent = new TimerTask() {
             @Override
             public void run() {
@@ -191,6 +232,7 @@ public class PlayingActivity extends Activity
         };
         mGUIUpdateTimer.schedule(mGUIUpdateEvent, 500, 100);
     }
+
 
 
     @Override // StateMachineClient
@@ -208,11 +250,21 @@ public class PlayingActivity extends Activity
         }
 
         if(newState == PlayingMachine.stateOnLaunched) {
-            // запускаем вычисление
-            onLaunching();
+            // запускаем объект
+            mLaunchedObject.Position().setPosition(mScene.getLaunchPoint());
+            mLaunchedObject.Velocity().setPosition(mMachine.getLaunchVelocity());
+            runPhxEngineTimer();
+            runGuiUpdateTimer();
+
         } else if (newState == PlayingMachine.stateOnFinished) {
             mPhxEvent.cancel();
             mGUIUpdateEvent.cancel();
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    mViewer.invalidate();
+                }
+            });
         }
     }
 }

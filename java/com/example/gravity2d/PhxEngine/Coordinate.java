@@ -1,11 +1,12 @@
 package com.example.gravity2d.PhxEngine;
+import java.io.Serializable;
 import java.lang.Math;
 
 /**
  * Класс для описания  позиции точки, либо вектора с началом в точке (0, 0)
  * @author ZiminAS
  */
-public class Coordinate {
+public class Coordinate implements Serializable {
 	private double mX;
 	private double mY;
 	

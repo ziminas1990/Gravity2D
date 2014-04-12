@@ -1,5 +1,7 @@
 package com.example.gravity2d.Activities.PlayingActivityClasses;
 
+import android.os.Bundle;
+
 import com.example.gravity2d.Activities.Common.AbstractStateMachine;
 import com.example.gravity2d.Activities.Common.StateMachineClient;
 import com.example.gravity2d.ModelObjects.SceneModel;
@@ -38,6 +40,18 @@ public class ScenePlayingModel extends SceneModel
     public ScenePlayingModel(long sceneId, String sceneName) {
         super(sceneId, sceneName);
         initData();
+    }
+
+    public void saveToBundle(Bundle data, String prefix) {
+        data.putInt(prefix + "mNextLaunchId", mNextLaunchId.intValue());
+        data.putInt(prefix + "mCurrentLaunchId", mCurrentLaunchId.intValue());
+        data.putSerializable(prefix + "mCurrentLaunch", mCurrentLaunch);
+    }
+
+    public void loadFromBundle(Bundle data, String prefix) {
+        mNextLaunchId = data.getInt(prefix + "mNextLaunchId");
+        mCurrentLaunchId = data.getInt(prefix + "mCurrentLaunchId");
+        mCurrentLaunch = (Vector<Coordinate>)data.getSerializable(prefix + "mCurrentLaunch");
     }
 
     /**

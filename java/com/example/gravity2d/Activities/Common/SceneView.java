@@ -82,10 +82,16 @@ public class SceneView extends View {
 		
 		mConverter.setPhxGrid(phxGrid);
 		mConverter.setLogicGrid(logicGrid);
-		
+		onConverterChanged();
+
 		super.onSizeChanged(w, h, oldw, oldh);
 	}
-	
+
+    /**
+     * Функция вызывается тогда, когда имело место изменение mConverter'а
+     */
+    protected void onConverterChanged() {}
+
 	protected void DrawPlanet(ModelPlanet planet, Canvas canvas, Paint paint) {
 		if(planet == null)
 			return;
@@ -99,10 +105,6 @@ public class SceneView extends View {
 		if(target == null)
 			return;
         drawLine(canvas, paint, target.FirstPoint(), target.SecondPoint());
-//		Coordinate first = mConverter.convertToPhx(target.FirstPoint());
-//		Coordinate second = mConverter.convertToPhx(target.SecondPoint());
-//		canvas.drawLine((float)first.x(), (float)first.y(),
-//				        (float)second.x(), (float)second.y(), paint);
 	}
 	
 	/**

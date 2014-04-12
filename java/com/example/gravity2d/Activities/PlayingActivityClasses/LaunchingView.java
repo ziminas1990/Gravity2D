@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.os.Bundle;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 
@@ -12,6 +13,7 @@ import com.example.gravity2d.Activities.Common.SceneView;
 import com.example.gravity2d.Activities.Common.StateMachineClient;
 import com.example.gravity2d.PhxEngine.Coordinate;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Vector;
@@ -55,6 +57,21 @@ public class LaunchingView extends SceneView
         init();
     }
 
+    public void saveToBundle(Bundle data, String prefix) {
+        synchronized (mTrajectories) {
+            mTrajectories.saveToBundle(data, prefix + "mTrajectories");
+        }
+    }
+
+    public void loadFromBundle(Bundle data, String prefix) {
+        mTrajectories.loadFromBundle(data, prefix + "mTrajectories");
+    }
+
+    protected void onConverterChanged() {
+        synchronized (mTrajectories) {
+            mTrajectories.updateAllTrajectories();
+        }
+    }
 
     public void setScene(ScenePlayingModel scene) {
         mScene = scene;
@@ -83,16 +100,15 @@ public class LaunchingView extends SceneView
         if(newState == PlayingMachine.stateOnPositionUpdate) {
             Integer id = mScene.getCurrentLaunch();
             if (id != 0) {
-                if(mTrajectories.trajectoryIsExist(id))
-                    mTrajectories.addPoint(id, mMachine.getUpdatedPosition());
-                else
-                    mTrajectories.addTrajectory(id, mScene.getCurrentLaunchTrajectory());
+                synchronized (mTrajectories) {
+                    if (mTrajectories.trajectoryIsExist(id))
+                        mTrajectories.addPoint(id, mMachine.getUpdatedPosition());
+                    else
+                        mTrajectories.addTrajectory(id, mScene.getCurrentLaunchTrajectory());
+                }
             }
 
         } else if(newState == PlayingMachine.stateOnParamsUpdate) {
-            invalidate();
-
-        } else if(newState == PlayingMachine.stateOnFinished) {
             invalidate();
         }
     }
@@ -155,36 +171,39 @@ public class LaunchingView extends SceneView
         Paint paint = new Paint();
         paint.setStyle(Paint.Style.STROKE);
         paint.setStrokeWidth(5);
-        paint.setColor(Color.rgb(255, 255, 0));
         canvas.drawPaint(paint);
 
         Vector<Coordinate> trajectory = null;
         Coordinate prevPoint = null;
 
-        // Отрисовываем траекторию текущего запуска:
-        trajectory = mTrajectories.getConvertedTrajectory(mScene.getCurrentLaunch());
-
-        if (trajectory != null) {
-            synchronized (trajectory) {
-                for (Coordinate point : trajectory) {
-                    if (prevPoint != null)
-                        canvas.drawLine((float) prevPoint.x(), (float) prevPoint.y(),
-                                (float) point.x(), (float) point.y(), paint);
-                    prevPoint = point;
-                }
-            }
-        }
-
         // Отрисовываем траекторию предыдущих запусков
         paint.setColor(Color.rgb(128, 128, 0));
         Map<Integer, Vector<Coordinate>> allTrajectories =
                 mTrajectories.getAllConverterTrajectories();
-        for(Map.Entry<Integer, Vector<Coordinate>> entry : allTrajectories.entrySet()) {
-            Integer id = entry.getKey();
-            if(id.equals(mScene.getCurrentLaunch()))
-                continue;
-            trajectory = entry.getValue();
-            prevPoint = null;
+        synchronized (allTrajectories) {
+            for (Map.Entry<Integer, Vector<Coordinate>> entry : allTrajectories.entrySet()) {
+                Integer id = entry.getKey();
+                if (id.equals(mScene.getCurrentLaunch()))
+                    continue;
+                trajectory = entry.getValue();
+                prevPoint = null;
+                synchronized (trajectory) {
+                    for (Coordinate point : trajectory) {
+                        if (prevPoint != null)
+                            canvas.drawLine((float) prevPoint.x(), (float) prevPoint.y(),
+                                    (float) point.x(), (float) point.y(), paint);
+                        prevPoint = point;
+                    }
+                }
+            }
+        }
+
+        // Отрисовываем траекторию текущего запуска:
+        paint.setColor(Color.rgb(255, 255, 0));
+        prevPoint = null;
+        trajectory = mTrajectories.getConvertedTrajectory(mScene.getCurrentLaunch());
+
+        if (trajectory != null) {
             synchronized (trajectory) {
                 for (Coordinate point : trajectory) {
                     if (prevPoint != null)

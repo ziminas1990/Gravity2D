@@ -1,5 +1,7 @@
 package com.example.gravity2d.Activities.PlayingActivityClasses;
 
+import android.os.Bundle;
+
 import com.example.gravity2d.Activities.Common.SurfaceConverter;
 import com.example.gravity2d.PhxEngine.Coordinate;
 
@@ -24,9 +26,9 @@ public class TrajectoryConverter {
     // TODO: заменить на одну карту, где значение - пара из двух траекторий
     /// Карта для сопоставления уникального идентификатора с траекторией в логической системе
     /// координат
-    private Map<Integer, Vector<Coordinate>> mTrajectories;
+    private HashMap<Integer, Vector<Coordinate>> mTrajectories;
     /// Карта для сопоставления уникального идентификатора с траекторией в системе координат экрана
-    private Map<Integer, Vector<Coordinate>> mConvertedTrajectories;
+    private HashMap<Integer, Vector<Coordinate>> mConvertedTrajectories;
 
     /// Конвертер координат из логической СК в физическую СК
     private SurfaceConverter mConverter;
@@ -39,6 +41,16 @@ public class TrajectoryConverter {
         mConverter = converter;
         mConvertedTrajectories = new HashMap<Integer, Vector<Coordinate>>();
         mTrajectories = new HashMap<Integer, Vector<Coordinate>>();
+    }
+
+    public void saveToBundle(Bundle data, String prefix) {
+        data.putSerializable(prefix + "mTrajectories", mTrajectories);
+    }
+
+    public void loadFromBundle(Bundle data, String prefix) {
+        mTrajectories =
+                (HashMap<Integer, Vector<Coordinate>>)
+                        data.getSerializable(prefix + "mTrajectories");
     }
 
     /**
@@ -94,9 +106,14 @@ public class TrajectoryConverter {
      * если изменились параметры объект SurfaceConverter, который был передан в конструктор
      */
     public void updateAllTrajectories() {
-        for(Map.Entry<Integer, Vector<Coordinate>> entry: mConvertedTrajectories.entrySet()) {
+        for(Map.Entry<Integer, Vector<Coordinate>> entry: mTrajectories.entrySet()) {
             Integer id = entry.getKey();
-            convertTrajectory(mTrajectories.get(id), entry.getValue());
+            Vector<Coordinate> converted = mConvertedTrajectories.get(id);
+            if(converted == null) {
+                converted = new Vector<Coordinate>();
+                mConvertedTrajectories.put(id, converted);
+            }
+            convertTrajectory(entry.getValue(), converted);
         }
     }
 
