@@ -26,12 +26,12 @@ public class PlanetEditMachine extends StateMachine {
 
     public void saveToBundle(Bundle data, String prefix) {
         super.saveToBundle(data, prefix + "[StateMachine]");
-        data.putSerializable(KEY_PLANET, mPlanet);
+        data.putSerializable(prefix + KEY_PLANET, mPlanet);
     }
 
     public void loadFromBundle(Bundle data, String prefix) {
         super.loadFromBundle(data, prefix + "[StateMachine]");
-        mPlanet = (ModelPlanet)data.getSerializable(KEY_PLANET);
+        mPlanet = (ModelPlanet)data.getSerializable(prefix + KEY_PLANET);
     }
 
 	/**

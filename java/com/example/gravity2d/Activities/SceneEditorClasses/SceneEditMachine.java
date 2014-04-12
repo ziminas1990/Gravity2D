@@ -3,17 +3,19 @@ package com.example.gravity2d.Activities.SceneEditorClasses;
 
 import android.os.Bundle;
 
+import com.example.gravity2d.Activities.Common.AbstractStateMachine;
 import com.example.gravity2d.Activities.Common.StateMachine;
+import com.example.gravity2d.Activities.Common.StateMachineClient;
 
 import java.util.Vector;
 
 /**
- * Класс реализует конечный автомат для управления процессом редактирования
- * сцены
+ * Класс реализует конечный автомат для управления процессом редактирования сцены
  * @author ZiminAS
  * @version 1.0
  */
-public class SceneEditMachine extends StateMachine {
+public class SceneEditMachine extends StateMachine
+                              implements StateMachineClient {
 
 	public static long MACHINE_TYPE_ID = 1;
 	
@@ -29,7 +31,8 @@ public class SceneEditMachine extends StateMachine {
 	public SceneEditMachine() {
         super(MACHINE_TYPE_ID);
 		mPlanetMachine = new PlanetEditMachine();
-		
+		mPlanetMachine.attachClient(this);
+
 		super.mTag = "[EditorMachine]";
 		super.setState(stateStart);
 	}
@@ -44,6 +47,22 @@ public class SceneEditMachine extends StateMachine {
     public void loadFromBundle(Bundle data, String prefix) {
         super.loadFromBundle(data, prefix + "[StateMachine]");
         mPlanetMachine.loadFromBundle(data, prefix + "mPlanetMachine.");
+    }
+
+    @Override //StateMachineClient
+    public boolean onAttaching(AbstractStateMachine machine)
+    {
+        return  machine == mPlanetMachine;
+    }
+
+    @Override //StateMachineClient
+    public void onDeattached(AbstractStateMachine machine) { return; }
+
+    @Override //StateMachineClient
+    public void onStateChanged(long oldState, long newState, AbstractStateMachine machine)
+    {
+        // Если меняется состояние одной из дочерних машин, то оповестим об этом клиентов
+        notifyEverybodyAgain();
     }
 
 	public PlanetEditMachine getPlanetMachine() {
@@ -72,7 +91,8 @@ public class SceneEditMachine extends StateMachine {
 		if(state == stateStart)
 			return "Choose an object for editing!";
 		else if(state == stateEditPlanet)
-			return "Editing planet: " + mPlanetMachine.getStateAsString();
+			return "Планета: радиус = " + Math.round(mPlanetMachine.getPlanet().Radius()) +
+                    "км, масса = " + Math.floor(mPlanetMachine.getPlanet().Weight());
 		else if(state == stateEditTarget)
 			return "Editing target: ";
 		else if(state == stateEditLauncher)

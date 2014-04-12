@@ -124,6 +124,8 @@ public class EditingViewer extends SceneView
 			edge = mConverter.convertToLogic(edge);
 			double R = Coordinate.calculateLength(center, edge);
 			planet.setRadius(R);
+            // Вычисляем массу (если указать радиус Земли, то результат будет равен массе Земли)
+            planet.setWeight(4.68 * Math.pow(10, 10) * Math.PI * (R * R * 1000000));
 			// Не смотря на то, что состояние машины не изменилось,
 			// радиус планеты изменился, и нужно оповестить об этом подписчиков
 			machine.setState(PlanetEditMachine.stateRadius);

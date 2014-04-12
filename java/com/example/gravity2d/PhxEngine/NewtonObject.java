@@ -1,5 +1,7 @@
 package com.example.gravity2d.PhxEngine;
 
+import java.io.Serializable;
+
 /**
  * Класс реализует объект Ньютоновой физики. Он расширяет кинематический объект
  * параметром "Масса".
@@ -7,6 +9,7 @@ package com.example.gravity2d.PhxEngine;
  * @version 1.0
  */
 public class NewtonObject extends KinematicsObject
+                          implements Serializable
 {	
 	// Масса
 	protected double mWeight;

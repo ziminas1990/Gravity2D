@@ -30,6 +30,5 @@ public interface StateMachineClient {
 	 * @param newState Новое состояние
 	 * @param machine Конечный автомат, изменивший своё состояние
 	 */
-	public void onStateChanged(long oldState, long newState,
-			                   AbstractStateMachine machine);
+	public void onStateChanged(long oldState, long newState, AbstractStateMachine machine);
 }
