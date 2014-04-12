@@ -88,6 +88,8 @@ public class StateMachine implements AbstractStateMachine {
             try {
                 client.onStateChanged(oldState, mState, this);
             } catch (Exception exception) {
+                Log.e(mTag, "Error in notifyEverybody() on state = " + mState +
+                            "! Client throw an exception!");
                 continue;
             }
         }
