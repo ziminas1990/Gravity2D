@@ -42,31 +42,36 @@ public class ModelTarget implements Serializable {
 	 * @param b Вторая точка отрезка
 	 * @return Возвращает true, если отрезок ab пересёк мишень
 	 */
-	boolean isCrossedBy(Coordinate a, Coordinate b) {
+	public boolean isCrossedBy(Coordinate a, Coordinate b) {
 		// Решение находилось через матрицы при помощи метода Крамера
 		// Пусть отрезок ab - это траектория, cd - это мишень. Далее для
 		// удобства введём ряд переменных
 		// И ещё: "Premature optimization is the root of all evil" Donald Knuth
 		double xba = b.x() - a.x();
 		double yba = b.y() - a.y();
-		double xcd = mFirstPoint.x() - mSecondPoint.x();
-		double ycd = mFirstPoint.y() - mSecondPoint.y();
-		double xca = mFirstPoint.x() - a.x();
-		double yca = mFirstPoint.y() - a.y();
+		double xdc = mFirstPoint.x() - mSecondPoint.x();
+		double ydc = mFirstPoint.y() - mSecondPoint.y();
+		double xac = a.x() - mSecondPoint.x();
+		double yac = a.y() - mSecondPoint.y();
 		/* Уравнение через матрицы:
-		 * / xba  xcd \ * / S1 \ = / xca \
-		 * \ yba  ycd /   \ S2 /   \ yca /
+		 * / xdc  -xba \ * / m \ = / xac \
+		 * \ ydc  -yba /   \ n /   \ yac /
 		 * Используем метод Крамера:
 		 */
-		double det = xba * ycd -  yba * xcd;
+		double det = xba * ydc -  xdc * yba;
 		if(det == 0)
 			// Отрезки параллельны
 			return false;
-		
+
+        det = 1 / det;
 		// s - расстояние от точки mFirstPoint до точки пересечения
-		double s = (xba * yca - yba * xca) / det;
-		
-		// Условие пересечения - s2 > 0 и s2 < length
-	    return s > 0 && s < length;
+		double n = (xdc * yac - xac * ydc) * det;
+        if(n < 0 || n > 1)
+            return false;
+		double m = (xba * yac - xac * yba) * det;
+        if(m < 0 || m > 1)
+            return false;
+		return true;
+
 	}
 }

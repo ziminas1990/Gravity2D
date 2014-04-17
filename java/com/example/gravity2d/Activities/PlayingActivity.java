@@ -16,6 +16,7 @@ import com.example.gravity2d.Activities.PlayingActivityClasses.PlayingMachine;
 import com.example.gravity2d.Activities.PlayingActivityClasses.ScenePlayingModel;
 import com.example.gravity2d.Database.DataBaseHelper;
 import com.example.gravity2d.ModelObjects.ModelPlanet;
+import com.example.gravity2d.ModelObjects.ModelTarget;
 import com.example.gravity2d.ModelObjects.SceneModel;
 import com.example.gravity2d.PhxEngine.Coordinate;
 import com.example.gravity2d.PhxEngine.NewtonEngine;
@@ -166,20 +167,45 @@ public class PlayingActivity extends Activity
 
     private String stateAsString(long state) {
         if(state == PlayingMachine.stateDefault)
-            return new String("Debug: state is stateDefault");
+            return new String("Нажмите кнопку \"Start!\"");
         if(state == PlayingMachine.statePreparation)
-            return new String("Debug: state is statePreparation");
+            return new String("Укажите вектор скорости");
         if(state == PlayingMachine.stateOnParamsUpdate)
-            return new String("Debug: state is stateOnParamsUpdate");
+            return new String("Скорость: " + mMachine.getLaunchVelocity().length() + " км/с");
         if(state == PlayingMachine.stateOnLaunched)
             return new String("Debug: state is stateOnLaunched");
         if(state == PlayingMachine.stateOnPositionUpdate)
             return new String("Debug: state is stateOnPositionUpdate");
         if(state == PlayingMachine.stateOnFinished)
-            return new String("Debug: state is stateOnFinished");
+            return new String("Запуск завершён!");
         return new String("Debug: wtf?!");
     }
 
+    /**
+     * Проверяет, не пересёк ли объект ту или иную мишень
+     * @param prev Предыдущая позиция объекта
+     * @param current Текущая позиция объекта
+     * @return
+     */
+    private boolean targetIsHited (Coordinate prev, Coordinate current) {
+        for(ModelTarget target : mScene.getAllTargets()) {
+            if(target.isCrossedBy(prev, current)) {
+                target.setStruckState(true);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * @return Возвращает true, если все мишени в рамках текущего запуска поражены
+     */
+    private boolean allTargetsAreHited() {
+        for(ModelTarget target : mScene.getAllTargets())
+            if(!target.isStrucked())
+                return false;
+        return true;
+    }
 
     /**
      * Проверяет, не столкнулся ли объект с планетой
@@ -197,10 +223,11 @@ public class PlayingActivity extends Activity
         return false;
     }
 
+
     private void runPhxEngineTimer() {
         final int interval = 50; // Как часто отрабатывает таймер
         final int timeWrap = 300; // Ускорение времени относительно реального (должен ровно
-        // делиться на precision
+                                  // делиться на precision
         final int precision = 5; // Эвристический коэфициент точности (чем больше, тем ниже
                                  // точность и выше производительность)
         mPhxEvent = new TimerTask() {
@@ -208,11 +235,17 @@ public class PlayingActivity extends Activity
             public void run() {
                 int circles_count = timeWrap / precision;
                 int circle_interval = interval * precision;
+                Coordinate prevPosition = new Coordinate(mLaunchedObject.Position());
                 for(int i = 0; i < circles_count; i++)
                     mPhxEngine.SimulationCircle(circle_interval);
                 mMachine.onPositionUpdate(mLaunchedObject.Position());
                 if(checkForCrash())
                     mMachine.onFinished();
+                if(targetIsHited(prevPosition, mLaunchedObject.Position()) &&
+                   allTargetsAreHited()) {
+                   mMachine.onAllTargetsAreHited();
+                   mMachine.onFinished();
+                }
             }
         };
         mPhxTimer.schedule(mPhxEvent, 500, interval);
@@ -234,7 +267,6 @@ public class PlayingActivity extends Activity
     }
 
 
-
     @Override // StateMachineClient
     public void onStateChanged(long oldState, final long newState,
                                AbstractStateMachine machine) {
@@ -251,6 +283,7 @@ public class PlayingActivity extends Activity
 
         if(newState == PlayingMachine.stateOnLaunched) {
             // запускаем объект
+            mScene.prepareToNewLaunch();
             mLaunchedObject.Position().setPosition(mScene.getLaunchPoint());
             mLaunchedObject.Velocity().setPosition(mMachine.getLaunchVelocity());
             runPhxEngineTimer();

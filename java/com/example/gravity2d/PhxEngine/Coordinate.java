@@ -35,7 +35,12 @@ public class Coordinate implements Serializable {
 		mX = pos.x();
 		mY = pos.y();
 	}
-	
+
+    /**
+     * @return Принимая точку за координаты вектора, возвращает длину вектора
+     */
+    public double length() { return Math.sqrt(mX * mX + mY * mY); }
+
 	/**
 	 * Функция инициализации координат вектора по двум точкам
 	 * @param vector Инициализируемый вектор

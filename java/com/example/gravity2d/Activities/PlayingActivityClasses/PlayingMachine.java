@@ -23,7 +23,8 @@ public class PlayingMachine extends StateMachine {
     // Запуск, обновление позиции, окончание запуска
     public static long stateOnLaunched = 3;
     public static long stateOnPositionUpdate = 4;
-    public static long stateOnFinished = 5;
+    public static long stateOnAllTargetsHited = 4;
+    public static long stateOnFinished = 6;
 
     private Coordinate mCurrentPosition;
     private Coordinate mLauncherVector;
@@ -100,6 +101,10 @@ public class PlayingMachine extends StateMachine {
         return mCurrentPosition;
     }
 
+    public boolean onAllTargetsAreHited() {
+        return super.setState(stateOnAllTargetsHited);
+    }
+
     /**
      * Функция вызывается, когда расчёт траектории прекращается (например, столкновение с планетой)
      */
@@ -109,8 +114,7 @@ public class PlayingMachine extends StateMachine {
 
     @Override  // AbstractStateMachine
     public boolean reset() {
-        super.setState(stateDefault);
-        return true;
+        return super.setState(stateDefault);
     }
 
     @Override  // AbstractStateMachine

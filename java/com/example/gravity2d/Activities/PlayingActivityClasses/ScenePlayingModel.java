@@ -4,6 +4,7 @@ import android.os.Bundle;
 
 import com.example.gravity2d.Activities.Common.AbstractStateMachine;
 import com.example.gravity2d.Activities.Common.StateMachineClient;
+import com.example.gravity2d.ModelObjects.ModelTarget;
 import com.example.gravity2d.ModelObjects.SceneModel;
 import com.example.gravity2d.PhxEngine.Coordinate;
 
@@ -52,6 +53,15 @@ public class ScenePlayingModel extends SceneModel
         mNextLaunchId = data.getInt(prefix + "mNextLaunchId");
         mCurrentLaunchId = data.getInt(prefix + "mCurrentLaunchId");
         mCurrentLaunch = (Vector<Coordinate>)data.getSerializable(prefix + "mCurrentLaunch");
+    }
+
+    /**
+     * Подготавливает сцену к следующему запуску
+     */
+    public void prepareToNewLaunch() {
+        // Необходимо пометить все мишени как "Не поражённые"
+        for(ModelTarget target : getAllTargets())
+            target.setStruckState(false);
     }
 
     /**
