@@ -11,14 +11,13 @@
     <string name="title_activity_playing">Запуск</string>
 
     <!-- Элементы из SceneActivity -->
-    <string name="editorBtnPlanet">Planet</string>
-    <string name="editorBtnTarget">Target</string>
-    <string name="editorBtnLauncher">Launcher</string>
-    <string name="editorBtnCancel">Cancel</string>
-    <string name="editorBtnApply">Apply!</string>
+    <string name="editorBtnPlanet">Планета</string>
+    <string name="editorBtnTarget">Мишень</string>
+    <string name="editorBtnCancel">Отмена</string>
+    <string name="editorBtnApply">Да будет так!</string>
 
     <!-- Элементы из PlayActivity -->
-    <string name="playBtnStart">Start!</string>
-    <string name="playBtnStop">Stop</string>
+    <string name="playBtnStart">Подготовить запуск!</string>
+    <string name="playBtnStop">Прервать!</string>
 
 </resources>

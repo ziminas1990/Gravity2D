@@ -22,8 +22,7 @@ public class SceneEditMachine extends StateMachine
 	static public long stateStart = 0;
 	static public long stateEditPlanet = 1;
 	static public long stateEditTarget = 2;
-	static public long stateEditLauncher = 3;
-	static public long stateApply = 4;
+	static public long stateApply = 3;
 
 	// Вложенные конечные автоматы для редактирования разных элементов
 	private PlanetEditMachine mPlanetMachine;
@@ -98,8 +97,6 @@ public class SceneEditMachine extends StateMachine
                     "км, масса = " + Math.floor(mPlanetMachine.getPlanet().Weight());
 		else if(state == stateEditTarget)
 			return "Editing target: ";
-		else if(state == stateEditLauncher)
-			return "Editing launcher: ";
 		return "";
 	}
 	

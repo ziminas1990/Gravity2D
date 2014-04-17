@@ -23,13 +23,6 @@
             android:layout_height="wrap_content"
             android:text="@string/editorBtnTarget"
             android:textSize="6pt" />
-
-        <Button
-            android:id="@+id/editorBtnLauncher"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/editorBtnLauncher"
-            android:textSize="6pt" />
         
         <Button
             android:id="@+id/editorBtnApply"

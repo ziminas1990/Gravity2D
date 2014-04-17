@@ -33,7 +33,6 @@ public class SceneEditorActivity extends Activity
 	
 	private Button mBtnPlanet;
 	private Button mBtnTarget;
-	private Button mBtnLauncher;
 	private Button mBtnCancel;
 	private Button mBtnApply;
 	private TextView mTextStatus;
@@ -62,7 +61,6 @@ public class SceneEditorActivity extends Activity
 		
 		mBtnPlanet = (Button)findViewById(R.id.editorBtnPlanet);
 		mBtnTarget = (Button)findViewById(R.id.editorBtnTarget);
-		mBtnLauncher = (Button)findViewById(R.id.editorBtnLauncher);
 		mBtnCancel = (Button)findViewById(R.id.editorBtnCancel);
 		mBtnApply = (Button)findViewById(R.id.editorBtnApply);
 		bindButtonsWithActions();
@@ -95,10 +93,6 @@ public class SceneEditorActivity extends Activity
 			@Override
 			public void onClick(View v) { onTargetEditing(); }
 		});
-		mBtnLauncher.setOnClickListener(new OnClickListener() {
-			@Override
-			public void onClick(View v) { onLauncherEditing(); }
-		});
 		mBtnCancel.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) { onCancelEditing(); }
@@ -115,10 +109,6 @@ public class SceneEditorActivity extends Activity
 	
 	private void onTargetEditing() {
 		mStateMachine.setState(SceneEditMachine.stateEditTarget);
-	}
-	
-	private void onLauncherEditing() {
-		mStateMachine.setState(SceneEditMachine.stateEditLauncher);
 	}
 	
 	private void onCancelEditing() {
@@ -171,8 +161,16 @@ public class SceneEditorActivity extends Activity
         if(newState == SceneEditMachine.stateApply) {
             if (oldState == SceneEditMachine.stateEditPlanet)
                 onPlanetApply(mStateMachine.getPlanetMachine());
-            else if(oldState == SceneEditMachine.stateEditTarget)
+            else if (oldState == SceneEditMachine.stateEditTarget)
                 onTargetApply(mStateMachine.getTargetMachine());
+        }
+
+        if(newState == SceneEditMachine.stateApply || newState == SceneEditMachine.stateStart) {
+            mBtnApply.setEnabled(false);
+            mBtnCancel.setEnabled(false);
+        } else {
+            mBtnApply.setEnabled(true);
+            mBtnCancel.setEnabled(true);
         }
 	}
 }

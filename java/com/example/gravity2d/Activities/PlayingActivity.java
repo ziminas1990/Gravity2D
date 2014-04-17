@@ -44,6 +44,8 @@ public class PlayingActivity extends Activity
 
     private TextView mStatus;
     private LaunchingView mViewer;
+    private Button mBtnStart;
+    private Button mBtnStop;
 
     private Timer mGUIUpdateTimer;
     private TimerTask mGUIUpdateEvent;
@@ -73,6 +75,9 @@ public class PlayingActivity extends Activity
 
         mViewer = (LaunchingView)findViewById(R.id.playViewer);
         mViewer.setScene(mScene);
+        mBtnStart = (Button)findViewById(R.id.playBtnStart);
+        mBtnStop = (Button)findViewById(R.id.playBtnStop);
+        bindActivityViewsWithMachine();
 
         mPhxEngine = new NewtonEngine();
         mPhxTimer = new Timer();
@@ -82,8 +87,6 @@ public class PlayingActivity extends Activity
 
         mGUIUpdateTimer = new Timer();
         mGUIUpdateEvent = null;
-
-        bindActivityViewsWithMachine();
     }
 
     @Override
@@ -139,25 +142,22 @@ public class PlayingActivity extends Activity
      * Связывает элементы интерфейса активити с конечным автоматом
      */
     private void bindActivityViewsWithMachine() {
-
-        Button btnStart = (Button)findViewById(R.id.playBtnStart);
-        btnStart.setOnClickListener(new View.OnClickListener() {
+        mBtnStart.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 mMachine.onPreparing();
             }
         });
 
-        Button btnStop = (Button)findViewById(R.id.playBtnStop);
-        btnStop.setOnClickListener(new View.OnClickListener() {
+        mBtnStop.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 mMachine.onFinished();
             }
         });
+        mBtnStop.setEnabled(false);
 
-        LaunchingView viewer = (LaunchingView)findViewById(R.id.playViewer);
-        mMachine.attachClient(viewer);
+        mMachine.attachClient(mViewer);
     }
 
     @Override // StateMachineClient
@@ -167,13 +167,13 @@ public class PlayingActivity extends Activity
 
     private String stateAsString(long state) {
         if(state == PlayingMachine.stateDefault)
-            return new String("Нажмите кнопку \"Start!\"");
+            return new String("Нажмите кнопку \"Подготовить запуск!\"");
         if(state == PlayingMachine.statePreparation)
             return new String("Укажите вектор скорости");
         if(state == PlayingMachine.stateOnParamsUpdate)
             return new String("Скорость: " + mMachine.getLaunchVelocity().length() + " км/с");
         if(state == PlayingMachine.stateOnLaunched)
-            return new String("Debug: state is stateOnLaunched");
+            return new String("Объект запущен! Нажмите \"Прервать!\", чтобы прервать запуск");
         if(state == PlayingMachine.stateOnPositionUpdate)
             return new String("Debug: state is stateOnPositionUpdate");
         if(state == PlayingMachine.stateOnFinished)
@@ -288,16 +288,20 @@ public class PlayingActivity extends Activity
             mLaunchedObject.Velocity().setPosition(mMachine.getLaunchVelocity());
             runPhxEngineTimer();
             runGuiUpdateTimer();
-
+        } else if (newState == PlayingMachine.statePreparation) {
+            mBtnStart.setEnabled(false);
+            mBtnStop.setEnabled(true);
         } else if (newState == PlayingMachine.stateOnFinished) {
-            mPhxEvent.cancel();
-            mGUIUpdateEvent.cancel();
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
+                    mBtnStop.setEnabled(false);
+                    mBtnStart.setEnabled(true);
                     mViewer.invalidate();
                 }
             });
+            mPhxEvent.cancel();
+            mGUIUpdateEvent.cancel();
         }
     }
 }
