@@ -154,8 +154,6 @@ public class SceneEditorActivity extends Activity
 	public void onStateChanged(long oldState, long newState,
                                AbstractStateMachine machine)
 	{
-		// При изменении состояния автомата, нужно обновлять текст с состоянием,
-		// а так же блокировать/разблокировать кнопки
 		mTextStatus.setText(mStateMachine.getStateAsString());
 
         if(newState == SceneEditMachine.stateApply) {

@@ -113,28 +113,29 @@ public class EditingViewer extends SceneView
     private boolean onTargetEditingEvent(MotionEvent event) {
         TargetEditMachine machine = mStateMachine.getTargetMachine();
         ModelTarget target = machine.getTarget();
-        // Определяем, какую точку редактировать:
-        Coordinate point = null;
-        long state = machine.getState();
-        if(state == TargetEditMachine.stateStart || state == TargetEditMachine.stateFirstPoint)
-            point = target.FirstPoint();
-        else
-            point = target.SecondPoint();
+        Coordinate touchPoint = new Coordinate(event.getX(), event.getY());
+        mConverter.convertToLogic(touchPoint);
 
-        point.setPosition(event.getX(), event.getY());
-        mConverter.convertToLogic(point);
-        if(state == TargetEditMachine.stateStart)
-            target.SecondPoint().setPosition(point);
-
-        if(event.getAction() == MotionEvent.ACTION_UP) {
-            if(state != TargetEditMachine.stateSecondPoint) {
-                machine.setState(TargetEditMachine.stateSecondPoint);
-            } else {
+        if(event.getAction() == MotionEvent.ACTION_DOWN) {
+            if(Coordinate.calculateLength(touchPoint, target.FirstPoint()) <
+               Coordinate.calculateLength(touchPoint, target.SecondPoint())) {
+                // Редактируется первая точка (она ближе к точке касания)
+                target.FirstPoint().setPosition(touchPoint);
                 machine.setState(TargetEditMachine.stateFirstPoint);
+            } else {
+                // Редактируется вторая точка (она ближе к точке касания)
+                target.SecondPoint().setPosition(touchPoint);
+                machine.setState(TargetEditMachine.stateSecondPoint);
             }
-        } else {
-            // Переключения н адругую точку не происходит, но нужно оповестить клиентов о том,
-            // что имели место изменения в положении мишени
+        } else if(event.getAction() == MotionEvent.ACTION_MOVE) {
+            if(machine.getState() == TargetEditMachine.stateFirstPoint) {
+                target.FirstPoint().setPosition(touchPoint);
+            } else if(machine.getState() == TargetEditMachine.stateSecondPoint) {
+                target.SecondPoint().setPosition(touchPoint);
+            } else {
+                // Это невозможно
+                return false;
+            }
             machine.notifyEverybodyAgain();
         }
         return true;
