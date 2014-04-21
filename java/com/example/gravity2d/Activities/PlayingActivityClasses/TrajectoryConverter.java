@@ -106,10 +106,10 @@ public class TrajectoryConverter {
      * если изменились параметры объект SurfaceConverter, который был передан в конструктор
      */
     public void updateAllTrajectories() {
-        for(Map.Entry<Integer, Vector<Coordinate>> entry: mTrajectories.entrySet()) {
+        for (Map.Entry<Integer, Vector<Coordinate>> entry : mTrajectories.entrySet()) {
             Integer id = entry.getKey();
             Vector<Coordinate> converted = mConvertedTrajectories.get(id);
-            if(converted == null) {
+            if (converted == null) {
                 converted = new Vector<Coordinate>();
                 mConvertedTrajectories.put(id, converted);
             }
@@ -130,7 +130,7 @@ public class TrajectoryConverter {
             convertedTrajectory.clear();
 
         for(Coordinate point : trajectory) {
-            Coordinate phxPoint = mConverter.convertToPhx(point);
+            Coordinate phxPoint = mConverter.getPhxPoint(point);
 
             if (prevPoint == null || Math.floor(phxPoint.x()) != Math.floor(prevPoint.x()) ||
                 Math.floor(phxPoint.y()) != Math.floor(prevPoint.y())) {
@@ -155,7 +155,7 @@ public class TrajectoryConverter {
             // Траектория ещё не была зарегистрирована ранее
             return false;
 
-        Coordinate newPosition = mConverter.convertToPhx(point);
+        Coordinate newPosition = mConverter.getPhxPoint(point);
         if(convertedTrajectory.size() == 0)
             return convertedTrajectory.add(newPosition);
 

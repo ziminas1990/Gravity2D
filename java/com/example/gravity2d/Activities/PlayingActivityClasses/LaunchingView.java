@@ -115,6 +115,7 @@ public class LaunchingView extends SceneView
 
     @Override  //View
     public boolean onTouchEvent(MotionEvent event) {
+        super.onTouchEvent(event);
         if (mMachine.getState() == PlayingMachine.statePreparation ||
             mMachine.getState() == PlayingMachine.stateOnParamsUpdate) {
 
@@ -129,7 +130,7 @@ public class LaunchingView extends SceneView
                 return true;
             }
         }
-        return super.onTouchEvent(event);
+        return true;
     }
 
     /**
@@ -139,7 +140,7 @@ public class LaunchingView extends SceneView
      */
     private boolean onParametersEditing(MotionEvent event) {
         Coordinate touchPoint = new Coordinate(event.getX(), event.getY());
-        mConverter.convertToLogic(touchPoint);
+        mConverter.convertToLogic(touchPoint, touchPoint);
         Coordinate launchPoint = mScene.getLaunchPoint();
         // Находим скорость:
         Coordinate velocity = new Coordinate(0, 0);

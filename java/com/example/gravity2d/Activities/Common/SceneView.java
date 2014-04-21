@@ -2,21 +2,20 @@ package com.example.gravity2d.Activities.Common;
 
 import java.util.Iterator;
 import java.util.Set;
-import java.util.Vector;
-import java.util.jar.Attributes;
+import java.lang.Math;
 
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.util.AttributeSet;
+import android.view.MotionEvent;
 import android.view.View;
 
 import com.example.gravity2d.ModelObjects.ModelPlanet;
 import com.example.gravity2d.ModelObjects.ModelTarget;
 import com.example.gravity2d.ModelObjects.SceneModel;
 import com.example.gravity2d.PhxEngine.Coordinate;
-import com.example.gravity2d.Activities.Common.SurfaceConverter;
 
 /**
  * Класс для отображения модели. Данный класс реализует отображения планет,
@@ -34,12 +33,17 @@ public class SceneView extends View {
 	
 	// Преобразователь координат ( Физические <-> Логические )
 	protected SurfaceConverter mConverter;
-	
+
+    // Набор полей, используемых для отслеживания жестов:
+    private Coordinate mMiddlePoint;
+    private double mLength;
+
 	public SceneView(Context context) {
 		super(context);
 		mS = 40000 * 40000;
 		mConverter = new SurfaceConverter();
 		mScene = new SceneModel();
+        mMiddlePoint = new Coordinate();
 	}
 	
 	public SceneView(Context context, AttributeSet attrs) {
@@ -47,6 +51,7 @@ public class SceneView extends View {
 		mS = 40000 * 40000;
 		mConverter = new SurfaceConverter();
 		mScene = new SceneModel();
+        mMiddlePoint = new Coordinate();
 	}
 	
 	/**
@@ -88,6 +93,45 @@ public class SceneView extends View {
 	}
 
     /**
+     * Данная реализация реагирует только на жесты, которые делаются двумя пальцами. При этом,
+     * вычисляется средняя точка между точками касания, и:
+     * 1. При перемещении средней точки, перемещается и сцена
+     * 2. При увеличении/уменьшении расстояния между точками касания, увеличивается или уменьшается
+     *    масштаб изображения (пока не реализовано)
+     */
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        super.onTouchEvent(event);
+        if(event.getPointerCount() != 2)
+            return true;
+
+        double middleX = (event.getX(0) + event.getX(1)) * 0.5;
+        double middleY = (event.getY(0) + event.getY(1)) * 0.5;
+        Coordinate middle = new Coordinate(middleX, middleY);
+        double length = Math.sqrt(Math.pow(event.getX(0) - event.getX(1), 2) +
+                                  Math.pow(event.getY(0) - event.getY(1), 2));
+
+        if(event.getActionMasked() != MotionEvent.ACTION_POINTER_DOWN) {
+            // Смещение:
+            double dx = mMiddlePoint.x() - middle.x();
+            double dy = mMiddlePoint.y() - middle.y();
+            mConverter.lgcTranslate(dx, dy);
+            // Масштабирование:
+            double scale = mLength / length;
+            mConverter.lgcTranslate(middle.x(), middle.y());
+            mConverter.lgcScale(scale, scale);
+            mConverter.lgcTranslate(-middle.x(), -middle.y());
+            // Обновление отображения сцены:
+            onConverterChanged();
+            invalidate();
+        }
+
+        mMiddlePoint.setPosition(middle);
+        mLength = length;
+        return true;
+    }
+
+    /**
      * Функция вызывается тогда, когда имело место изменение mConverter'а
      */
     protected void onConverterChanged() {}
@@ -95,7 +139,7 @@ public class SceneView extends View {
 	protected void DrawPlanet(ModelPlanet planet, Canvas canvas, Paint paint) {
 		if(planet == null)
 			return;
-		Coordinate center = mConverter.convertToPhx(planet.Position());
+		Coordinate center = mConverter.getPhxPoint(planet.Position());
 		canvas.drawCircle((float)center.x(), (float)center.y(),
 				          (float)mConverter.convertToPhx(planet.Radius()),
 				          paint);
@@ -106,9 +150,9 @@ public class SceneView extends View {
 			return;
         paint.setStrokeWidth(3);
         paint.setColor((target.isStrucked()) ? Color.rgb(128, 0, 0) : Color.rgb(255, 0, 0));
-        Coordinate phxStart = mConverter.convertToPhx(target.FirstPoint());
-        Coordinate phxEnd = mConverter.convertToPhx( target.SecondPoint());
-        canvas.drawCircle((float)phxStart.x(), (float)phxStart.y(), 3, paint);
+        Coordinate phxStart = mConverter.getPhxPoint(target.FirstPoint());
+        Coordinate phxEnd = mConverter.getPhxPoint(target.SecondPoint());
+        canvas.drawCircle((float) phxStart.x(), (float) phxStart.y(), 3, paint);
         canvas.drawCircle((float)phxEnd.x(), (float)phxEnd.y(), 3, paint);
         canvas.drawLine((float)phxStart.x(), (float)phxStart.y(),
                         (float)phxEnd.x(), (float)phxEnd.y(), paint);
@@ -150,7 +194,7 @@ public class SceneView extends View {
 		
 		// Точка запуска:
 		paint.setColor(Color.RED);
-		Coordinate lpoint = mConverter.convertToPhx(mScene.getLaunchPoint());
+		Coordinate lpoint = mConverter.getPhxPoint(mScene.getLaunchPoint());
 		canvas.drawCircle((float)lpoint.x(), (float)lpoint.y(),
 				          5 /*точка запуска не имеет физич. размера*/, paint);
 	}
@@ -162,28 +206,10 @@ public class SceneView extends View {
      * @param end Конец отрезка
      */
     protected void drawLine(Canvas canvas, Paint paint, Coordinate start, Coordinate end) {
-        Coordinate phxStart = mConverter.convertToPhx(start);
-        Coordinate phxEnd = mConverter.convertToPhx(end);
+        Coordinate phxStart = mConverter.getPhxPoint(start);
+        Coordinate phxEnd = mConverter.getPhxPoint(end);
         canvas.drawLine((float)phxStart.x(), (float)phxStart.y(),
                         (float)phxEnd.x(), (float)phxEnd.y(), paint);
-    }
-
-    /**
-     * Вспомогательная функция для отрисовки ломаной линии, описанной в логической
-     * системе координат
-     * @param multiLine вершины ломаной линии
-     */
-    protected void drawMultiLine(Canvas canvas, Paint paint, Vector<Coordinate> multiLine) {
-        int size = multiLine.size();
-        if(size < 2)
-            return;
-        Coordinate first = mConverter.convertToPhx(multiLine.get(0));
-        for(int i = 1; i < size; i++) {
-            Coordinate second = mConverter.convertToPhx(multiLine.get(i));
-            canvas.drawLine((float)first.x(), (float)first.y(),
-                            (float)second.x(), (float)second.y(), paint);
-            first = second;
-        }
     }
 
     /**
@@ -194,13 +220,10 @@ public class SceneView extends View {
      */
     protected void drawVector(Canvas canvas, Paint paint, Coordinate start,
                               Coordinate vector, double k) {
-        Coordinate phxStart = mConverter.convertToPhx(start);
+        Coordinate phxStart = mConverter.getPhxPoint(start);
         Coordinate phxVector =
-                mConverter.convertToPhx(new Coordinate(vector.x() * k, vector.y() * k));
+                mConverter.getPhxPoint(new Coordinate(vector.x() * k, vector.y() * k));
         canvas.drawLine((float)phxStart.x(), (float)phxStart.y(),
                         (float)phxVector.x(), (float)phxVector.y(), paint);
-    }
-    protected void drawVector(Canvas canvas, Paint paint, Coordinate start, Coordinate vector) {
-        drawVector(canvas, paint, start, vector, 1);
     }
 }

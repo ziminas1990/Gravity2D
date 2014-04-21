@@ -99,22 +99,20 @@ public class EditingViewer extends SceneView
 
 	@Override  //View
 	public boolean onTouchEvent(MotionEvent event) {
+        super.onTouchEvent(event);
 		long state = mStateMachine.getState();
 		if(state == SceneEditMachine.stateEditPlanet)
 			return onPlanetEditingEvent(event);
 		else if(state == SceneEditMachine.stateEditTarget)
             return onTargetEditingEvent(event);
-        else
-			// Если ничего не редактируется, то SceneView ведёт себя
-			// как обычно, например, перемещает сцену
-			return super.onTouchEvent(event);
+	    return true;
 	}
 
     private boolean onTargetEditingEvent(MotionEvent event) {
         TargetEditMachine machine = mStateMachine.getTargetMachine();
         ModelTarget target = machine.getTarget();
         Coordinate touchPoint = new Coordinate(event.getX(), event.getY());
-        mConverter.convertToLogic(touchPoint);
+        mConverter.convertToLogic(touchPoint, touchPoint);
 
         if(event.getAction() == MotionEvent.ACTION_DOWN) {
             if(Coordinate.calculateLength(touchPoint, target.FirstPoint()) <
@@ -150,14 +148,14 @@ public class EditingViewer extends SceneView
 		// Первое касание определяет центр планеты, а последующие - радиус
 		if(event.getAction() == MotionEvent.ACTION_DOWN) {
 			Coordinate pos = new Coordinate(event.getX(), event.getY());
-			mConverter.convertToLogic(pos);
+			mConverter.convertToLogic(pos, pos);
 			planet.setPosition(pos);
 			machine.setState(PlanetEditMachine.stateRadius);
 			
 		} else if(event.getAction() == MotionEvent.ACTION_MOVE) {
 			Coordinate center = planet.Position();
 			Coordinate edge = new Coordinate(event.getX(), event.getY());
-			mConverter.convertToLogic(edge);
+			mConverter.convertToLogic(edge, edge);
 			double R = Coordinate.calculateLength(center, edge);
 			planet.setRadius(R);
             // Вычисляем массу (если указать радиус Земли, то результат будет равен массе Земли)
