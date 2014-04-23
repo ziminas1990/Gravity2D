@@ -28,6 +28,7 @@ public class PlayingMachine extends StateMachine {
 
     private Coordinate mCurrentPosition;
     private Coordinate mLauncherVector;
+    private double mTimeWrap;
 
     public PlayingMachine () {
         super(MACHINE_TYPE_ID);
@@ -35,6 +36,7 @@ public class PlayingMachine extends StateMachine {
         super.setState(stateDefault);
         mCurrentPosition = null;
         mLauncherVector = null;
+        mTimeWrap = 1;
     }
 
     @Override
@@ -111,6 +113,18 @@ public class PlayingMachine extends StateMachine {
     public void onFinished() {
         super.setState(stateOnFinished);
     }
+
+    /**
+     * Устанавливает ускорение времени
+     * @param wrap Коэффициент ускорения времени. Если wrap > 1, то течение времени ускоряется,
+     *             если < 1, то замедляется
+     */
+    public void setTimeWrap(double wrap) { mTimeWrap = wrap; }
+
+    /**
+     * @return Возвращает текущий коэффициент ускорения времени
+     */
+    public double getTimeWrap() { return mTimeWrap; }
 
     @Override  // AbstractStateMachine
     public boolean reset() {

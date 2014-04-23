@@ -19,7 +19,7 @@ public class KinematicsEngine implements PhxEngineInterface {
     }
 
 	@Override // PhxEngineInterface
-	public void SimulationCircle(int interval) {
+	public void SimulationCircle(double interval) {
 		double seconds = interval / 1000.0;
 		Iterator<KinematicsObject> itObj = mObjects.iterator();
 		while(itObj.hasNext()) {

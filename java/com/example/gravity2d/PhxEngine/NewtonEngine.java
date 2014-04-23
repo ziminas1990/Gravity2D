@@ -23,7 +23,7 @@ public class NewtonEngine extends KinematicsEngine
 		acceleration = new Coordinate();
 	}
 	
-	public void SimulationCircle(int interval)
+	public void SimulationCircle(double interval)
 	{
 		Iterator<NewtonObject> itObject = mObjects.iterator();
 		while(itObject.hasNext()) {

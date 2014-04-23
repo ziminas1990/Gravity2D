@@ -17,8 +17,8 @@ public interface PhxEngineInterface {
 	 * B с некоторой силой F, то эта сила не будет изменяться на протяжении
 	 * всего интервала, не смотря на то, что расстояние между A и B изменяется.
 	 * Поэтому, чем меньше значение интервала, тем выше точность симуляции.
-	 * @param interval Временной интервал симуляции
+	 * @param interval Временной интервал симуляции, выраженный в миллисекундах
 	 */
-	void SimulationCircle(int interval);
+	void SimulationCircle(double interval);
 	
 }

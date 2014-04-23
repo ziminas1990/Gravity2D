@@ -61,6 +61,7 @@ public class PlayingActivity extends Activity
 
         mMachine = new PlayingMachine();
         mMachine.attachClient(this);
+        mMachine.setTimeWrap(250);
         mMachine.reset();
 
         // Загружаем сцену:
@@ -225,19 +226,38 @@ public class PlayingActivity extends Activity
 
 
     private void runPhxEngineTimer() {
-        final int interval = 50; // Как часто отрабатывает таймер
-        final int timeWrap = 300; // Ускорение времени относительно реального (должен ровно
-                                  // делиться на precision
-        final int precision = 5; // Эвристический коэфициент точности (чем больше, тем ниже
-                                 // точность и выше производительность)
+        /**
+         Идея:
+         пусть прошло N ms реального времени. Множитель времени - W. Значит должно пройти N*W ms
+         игрового времени. Чтобы увеличить точность, необходимо вызывать SimulationCircle в цикле
+         для отрезков времени, меньших чем N*W. Т.е. время N*W разбивается на S временных
+         отрезков, каждый из которых - T ms. Чем больше S, тем выше точность. Тогда введём
+         коэффициент точности P = S / T. Получаем систему:
+         S * T = N * W
+         S / T = P
+         , где S и T, неизвестные.
+         Число S должно быть целым, поэтому решаем относительно его, и получаем:
+         S = sqrt(N*W*P) и округляем до целого числа.
+         T = S / P
+         */
+
+        final int interval = 50; // N - Период таймера (ms)
+        final double precision = 0.1; // P - эвристический коэффициент точности
+
         mPhxEvent = new TimerTask() {
             @Override
             public void run() {
-                int circles_count = timeWrap / precision;
-                int circle_interval = interval * precision;
+                // Рассчитываем S (circles_count):
+                int circles_count = (int)Math.sqrt(interval * mMachine.getTimeWrap() * precision);
+                if(circles_count == 0)
+                    circles_count = 1;
+                // Рассчитываем T (circle_interval):
+                double circle_interval = circles_count / precision;
+                // Запускаем вычисление
                 Coordinate prevPosition = new Coordinate(mLaunchedObject.Position());
                 for(int i = 0; i < circles_count; i++)
                     mPhxEngine.SimulationCircle(circle_interval);
+
                 mMachine.onPositionUpdate(mLaunchedObject.Position());
                 if(checkForCrash())
                     mMachine.onFinished();

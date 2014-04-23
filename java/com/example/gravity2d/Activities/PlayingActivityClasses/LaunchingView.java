@@ -69,10 +69,11 @@ public class LaunchingView extends SceneView
         mTrajectories.loadFromBundle(data, prefix + "mTrajectories");
     }
 
-    protected void onConverterChanged() {
+    protected void onConverterChanged(double dx, double dy, double scale) {
         synchronized (mTrajectories) {
             mTrajectories.updateAllTrajectories();
         }
+        mMachine.setTimeWrap(mMachine.getTimeWrap() * scale);
     }
 
     public void setScene(ScenePlayingModel scene) {

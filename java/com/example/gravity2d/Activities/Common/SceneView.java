@@ -87,7 +87,7 @@ public class SceneView extends View {
 		
 		mConverter.setPhxGrid(phxGrid);
 		mConverter.setLogicGrid(logicGrid);
-		onConverterChanged();
+		onConverterChanged(0, 0, 1);
 
 		super.onSizeChanged(w, h, oldw, oldh);
 	}
@@ -122,7 +122,7 @@ public class SceneView extends View {
             mConverter.lgcScale(scale, scale);
             mConverter.lgcTranslate(-middle.x(), -middle.y());
             // Обновление отображения сцены:
-            onConverterChanged();
+            onConverterChanged(dx, dy, scale);
             invalidate();
         }
 
@@ -133,8 +133,11 @@ public class SceneView extends View {
 
     /**
      * Функция вызывается тогда, когда имело место изменение mConverter'а
+     * @param dx Насколько была смещена логическая СК относительно физической по оси x
+     * @param dy Насколько была смещена логическая СК относительно физической по оси y
+     * @param scale Множитель масштаба
      */
-    protected void onConverterChanged() {}
+    protected void onConverterChanged(double dx, double dy, double scale) {}
 
 	protected void DrawPlanet(ModelPlanet planet, Canvas canvas, Paint paint) {
 		if(planet == null)
