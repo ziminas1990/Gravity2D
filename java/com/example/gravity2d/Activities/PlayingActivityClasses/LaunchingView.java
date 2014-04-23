@@ -6,6 +6,7 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.os.Bundle;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 
 import com.example.gravity2d.Activities.Common.AbstractStateMachine;
@@ -35,6 +36,7 @@ public class LaunchingView extends SceneView
     private PlayingMachine mMachine;
     private ScenePlayingModel mScene;
     boolean isInvalidated;
+
 
     // Карта, сопоставляющая траектории в mScene с их вариантом, сконвертированным для
     // отображения в LaunchingView. Введена с целью оптимизации процесса отрисовки
@@ -101,10 +103,9 @@ public class LaunchingView extends SceneView
             Integer id = mScene.getCurrentLaunch();
             if (id != 0) {
                 synchronized (mTrajectories) {
-                    if (mTrajectories.trajectoryIsExist(id))
-                        mTrajectories.addPoint(id, mMachine.getUpdatedPosition());
-                    else
-                        mTrajectories.addTrajectory(id, mScene.getCurrentLaunchTrajectory());
+                    if (!mTrajectories.trajectoryIsExist(id))
+                        mTrajectories.addTrajectory(id, new Vector<Coordinate>());
+                    mTrajectories.addPoint(id, mMachine.getUpdatedPosition());
                 }
             }
 

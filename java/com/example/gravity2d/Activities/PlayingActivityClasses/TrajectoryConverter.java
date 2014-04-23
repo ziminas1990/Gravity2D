@@ -124,12 +124,11 @@ public class TrajectoryConverter {
      */
     private void convertTrajectory(Vector<Coordinate> trajectory,
                                    Vector<Coordinate> convertedTrajectory) {
-
         Coordinate prevPoint = null;
-        if(convertedTrajectory.size() != 0)
+        if (convertedTrajectory.size() != 0)
             convertedTrajectory.clear();
 
-        for(Coordinate point : trajectory) {
+        for (Coordinate point : trajectory) {
             Coordinate phxPoint = mConverter.getPhxPoint(point);
 
             if (prevPoint == null || Math.floor(phxPoint.x()) != Math.floor(prevPoint.x()) ||
@@ -149,8 +148,10 @@ public class TrajectoryConverter {
      * отвечает на вопрос "Есть ли смысл перерисовывать траекторию на экране?"
      */
     public boolean addPoint(Integer id, Coordinate point) {
-        Vector<Coordinate> convertedTrajectory = mConvertedTrajectories.get(id);
+        Vector<Coordinate> trajectory = mTrajectories.get(id);
+        trajectory.add(new Coordinate(point));
 
+        Vector<Coordinate> convertedTrajectory = mConvertedTrajectories.get(id);
         if(convertedTrajectory == null)
             // Траектория ещё не была зарегистрирована ранее
             return false;
