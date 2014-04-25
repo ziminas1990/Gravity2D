@@ -181,22 +181,20 @@ public class LaunchingView extends SceneView
 
         // Отрисовываем траекторию предыдущих запусков
         paint.setColor(Color.rgb(128, 128, 0));
-        Map<Integer, Vector<Coordinate>> allTrajectories =
-                mTrajectories.getAllConverterTrajectories();
-        synchronized (allTrajectories) {
+        synchronized (mTrajectories) {
+            Map<Integer, Vector<Coordinate>> allTrajectories =
+                    mTrajectories.getAllConverterTrajectories();
             for (Map.Entry<Integer, Vector<Coordinate>> entry : allTrajectories.entrySet()) {
                 Integer id = entry.getKey();
                 if (id.equals(mScene.getCurrentLaunch()))
                     continue;
                 trajectory = entry.getValue();
                 prevPoint = null;
-                synchronized (trajectory) {
-                    for (Coordinate point : trajectory) {
-                        if (prevPoint != null)
-                            canvas.drawLine((float) prevPoint.x(), (float) prevPoint.y(),
-                                    (float) point.x(), (float) point.y(), paint);
-                        prevPoint = point;
-                    }
+                for (Coordinate point : trajectory) {
+                    if (prevPoint != null)
+                        canvas.drawLine((float) prevPoint.x(), (float) prevPoint.y(),
+                                (float) point.x(), (float) point.y(), paint);
+                    prevPoint = point;
                 }
             }
         }
