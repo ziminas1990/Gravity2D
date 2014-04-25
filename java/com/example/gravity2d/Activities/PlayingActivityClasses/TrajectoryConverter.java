@@ -28,7 +28,14 @@ public class TrajectoryConverter {
     /// координат
     private HashMap<Integer, Vector<Coordinate>> mTrajectories;
     /// Карта для сопоставления уникального идентификатора с траекторией в системе координат экрана
-    private HashMap<Integer, Vector<Coordinate>> mConvertedTrajectories;
+    private HashMap<Integer, Trajectory> mConvertedTrajectories;
+
+    /// Карта для сопоставления уникального идентификатора с доп. информацией о траектории
+    class ExtraData {
+        // Единичный вектор, направленый от N-1 к N-2 точки траектории, причём N - последняя точка
+        // Используется для оптимизации
+        Coordinate reverseVector;
+    }
 
     /// Конвертер координат из логической СК в физическую СК
     private SurfaceConverter mConverter;
@@ -39,7 +46,7 @@ public class TrajectoryConverter {
      */
     public TrajectoryConverter(SurfaceConverter converter) {
         mConverter = converter;
-        mConvertedTrajectories = new HashMap<Integer, Vector<Coordinate>>();
+        mConvertedTrajectories = new HashMap<Integer, Trajectory>();
         mTrajectories = new HashMap<Integer, Vector<Coordinate>>();
     }
 
@@ -59,10 +66,10 @@ public class TrajectoryConverter {
      * @param trajectory Траектория, описанная в логической системе координат
      * @return Возвращает преобразованную в физическую систему координат траекторию
      */
-    public Vector<Coordinate> addTrajectory(Integer id, Vector<Coordinate> trajectory) {
-        Vector<Coordinate> convertedTrajectory = mConvertedTrajectories.get(id);
+    public Trajectory addTrajectory(Integer id, Vector<Coordinate> trajectory) {
+        Trajectory convertedTrajectory = mConvertedTrajectories.get(id);
         if(convertedTrajectory == null) {
-            convertedTrajectory = new Vector<Coordinate>();
+            convertedTrajectory = new Trajectory();
             mConvertedTrajectories.put(id, convertedTrajectory);
         }
         convertTrajectory(trajectory, convertedTrajectory);
@@ -89,14 +96,14 @@ public class TrajectoryConverter {
      * @return Возвращает сконвертированную траекторию, либо null, если с траекторией trajectory
      * не сопоставлена сконвертированная траектория
      */
-    public Vector<Coordinate> getConvertedTrajectory(Integer id) {
+    public Trajectory getConvertedTrajectory(Integer id) {
         return mConvertedTrajectories.get(id);
     }
 
     /**
      * @return Возвращает все траектории, описанные в системе координат экрана
      */
-    public Map<Integer, Vector<Coordinate>> getAllConverterTrajectories() {
+    public HashMap<Integer, Trajectory> getAllConverterTrajectories() {
         return mConvertedTrajectories;
     }
 
@@ -108,9 +115,9 @@ public class TrajectoryConverter {
     public void updateAllTrajectories() {
         for (Map.Entry<Integer, Vector<Coordinate>> entry : mTrajectories.entrySet()) {
             Integer id = entry.getKey();
-            Vector<Coordinate> converted = mConvertedTrajectories.get(id);
+            Trajectory converted = mConvertedTrajectories.get(id);
             if (converted == null) {
-                converted = new Vector<Coordinate>();
+                converted = new Trajectory();
                 mConvertedTrajectories.put(id, converted);
             }
             convertTrajectory(entry.getValue(), converted);
@@ -123,9 +130,9 @@ public class TrajectoryConverter {
      * @param convertedTrajectory Результат конвертации
      */
     private void convertTrajectory(Vector<Coordinate> trajectory,
-                                   Vector<Coordinate> convertedTrajectory) {
+                                   Trajectory convertedTrajectory) {
         Coordinate prevPoint = null;
-        if (convertedTrajectory.size() != 0)
+        if (convertedTrajectory.getLength() != 0)
             convertedTrajectory.clear();
 
         for (Coordinate point : trajectory) {
@@ -133,7 +140,7 @@ public class TrajectoryConverter {
 
             if (prevPoint == null || Math.floor(phxPoint.x()) != Math.floor(prevPoint.x()) ||
                 Math.floor(phxPoint.y()) != Math.floor(prevPoint.y())) {
-                convertedTrajectory.add(phxPoint);
+                convertedTrajectory.addPoint(phxPoint);
                 prevPoint = phxPoint;
             }
         }
@@ -151,19 +158,18 @@ public class TrajectoryConverter {
         Vector<Coordinate> trajectory = mTrajectories.get(id);
         trajectory.add(new Coordinate(point));
 
-        Vector<Coordinate> convertedTrajectory = mConvertedTrajectories.get(id);
+        Trajectory convertedTrajectory = mConvertedTrajectories.get(id);
         if(convertedTrajectory == null)
             // Траектория ещё не была зарегистрирована ранее
             return false;
 
         Coordinate newPosition = mConverter.getPhxPoint(point);
-        if(convertedTrajectory.size() == 0)
-            return convertedTrajectory.add(newPosition);
+        if(convertedTrajectory.getLength() == 0)
+            return convertedTrajectory.addPoint(newPosition);
 
-        Coordinate oldPosition = convertedTrajectory.lastElement();
-        if(Math.floor(newPosition.x()) != Math.floor(oldPosition.x()) ||
-           Math.floor(newPosition.y()) != Math.floor(oldPosition.y()))
-            return convertedTrajectory.add(newPosition);
+        if(Math.floor(newPosition.x()) != Math.floor(convertedTrajectory.getX(-1)) ||
+           Math.floor(newPosition.y()) != Math.floor(convertedTrajectory.getY(-1)))
+            return convertedTrajectory.addPoint(newPosition);
 
         return false;
     }

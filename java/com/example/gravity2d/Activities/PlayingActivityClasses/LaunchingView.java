@@ -176,26 +176,24 @@ public class LaunchingView extends SceneView
         paint.setStrokeWidth(5);
         canvas.drawPaint(paint);
 
-        Vector<Coordinate> trajectory = null;
+        Trajectory trajectory = null;
         Coordinate prevPoint = null;
 
         // Отрисовываем траекторию предыдущих запусков
         paint.setColor(Color.rgb(128, 128, 0));
         synchronized (mTrajectories) {
-            Map<Integer, Vector<Coordinate>> allTrajectories =
+            HashMap<Integer, Trajectory> allTrajectories =
                     mTrajectories.getAllConverterTrajectories();
-            for (Map.Entry<Integer, Vector<Coordinate>> entry : allTrajectories.entrySet()) {
+            for (Map.Entry<Integer, Trajectory> entry : allTrajectories.entrySet()) {
                 Integer id = entry.getKey();
                 if (id.equals(mScene.getCurrentLaunch()))
                     continue;
                 trajectory = entry.getValue();
-                prevPoint = null;
-                for (Coordinate point : trajectory) {
-                    if (prevPoint != null)
-                        canvas.drawLine((float) prevPoint.x(), (float) prevPoint.y(),
-                                (float) point.x(), (float) point.y(), paint);
-                    prevPoint = point;
-                }
+                float arrX[] = trajectory.getAllX();
+                float arrY[] = trajectory.getAllY();
+                int length = trajectory.getLength();
+                for(int i = 0; i < length - 1; i++)
+                    canvas.drawLine(arrX[i], arrY[i], arrX[i+1], arrY[i+1], paint);
             }
         }
 
@@ -206,12 +204,11 @@ public class LaunchingView extends SceneView
 
         if (trajectory != null) {
             synchronized (trajectory) {
-                for (Coordinate point : trajectory) {
-                    if (prevPoint != null)
-                        canvas.drawLine((float) prevPoint.x(), (float) prevPoint.y(),
-                                (float) point.x(), (float) point.y(), paint);
-                    prevPoint = point;
-                }
+                float arrX[] = trajectory.getAllX();
+                float arrY[] = trajectory.getAllY();
+                int length = trajectory.getLength();
+                for(int i = 0; i < length - 1; i++)
+                    canvas.drawLine(arrX[i], arrY[i], arrX[i+1], arrY[i+1], paint);
             }
         }
 
