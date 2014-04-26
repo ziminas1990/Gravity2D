@@ -1,6 +1,7 @@
 package com.example.gravity2d.Activities.PlayingActivityClasses;
 
 import android.os.Bundle;
+import android.util.Log;
 
 import com.example.gravity2d.Activities.Common.SurfaceConverter;
 import com.example.gravity2d.PhxEngine.Coordinate;
@@ -124,6 +125,24 @@ public class TrajectoryConverter {
         }
     }
 
+    private void getPhxBorders(double borderX[], double borderY[]) {
+        Coordinate phxGrid[] = mConverter.getPhxGrid();
+        if(phxGrid[0].x() < phxGrid[1].x()) {
+            borderX[0] = phxGrid[0].x();
+            borderX[1] = phxGrid[1].x();
+        } else {
+            borderX[0] = phxGrid[1].x();
+            borderX[1] = phxGrid[0].x();
+        }
+        if(phxGrid[0].y() < phxGrid[1].y()) {
+            borderY[0] = phxGrid[0].y();
+            borderY[1] = phxGrid[1].y();
+        } else {
+            borderY[0] = phxGrid[1].y();
+            borderY[1] = phxGrid[0].y();
+        }
+    }
+
     /**
      * Производит конвертирование траектории trajectory
      * @param trajectory Траектория, требующая конвертации
@@ -135,11 +154,27 @@ public class TrajectoryConverter {
         if (convertedTrajectory.getLength() != 0)
             convertedTrajectory.clear();
 
+        // Определим физические границы виджета (для отсеивания неугодных точек):
+        double borderX[] = new double[2];
+        double borderY[] = new double[2];
+        getPhxBorders(borderX, borderY);
+
         for (Coordinate point : trajectory) {
             Coordinate phxPoint = mConverter.getPhxPoint(point);
 
-            if (prevPoint == null || Math.floor(phxPoint.x()) != Math.floor(prevPoint.x()) ||
-                Math.floor(phxPoint.y()) != Math.floor(prevPoint.y())) {
+            /*
+            Условие для оптимизации. Точка добавляется только если:
+            1. Точка в пределах экрана
+            2. Расстояние от соседней точки на экране - не менее трёх пикселей (примерно)
+             */
+            if (// Точка в пределах экрана:
+                (phxPoint.x() > borderX[0] && phxPoint.x() < borderX[1] &&
+                phxPoint.y() > borderY[0] && phxPoint.y() < borderY[1]) &&
+                // Расстояние до предыдущей точки - не менее трёх пикселей
+                (prevPoint == null ||
+                Math.abs(phxPoint.x() - prevPoint.x()) > 3 ||
+                Math.abs(phxPoint.y() - prevPoint.y()) > 3)) {
+
                 convertedTrajectory.addPoint(phxPoint);
                 prevPoint = phxPoint;
             }
@@ -167,9 +202,12 @@ public class TrajectoryConverter {
         if(convertedTrajectory.getLength() == 0)
             return convertedTrajectory.addPoint(newPosition);
 
-        if(Math.floor(newPosition.x()) != Math.floor(convertedTrajectory.getX(-1)) ||
-           Math.floor(newPosition.y()) != Math.floor(convertedTrajectory.getY(-1)))
+        if (// Расстояние до предыдущей точки - не менее трёх пикселей
+            convertedTrajectory.size == 0 ||
+            Math.abs(newPosition.x() - convertedTrajectory.getX(-1)) > 3 ||
+            Math.abs(newPosition.y() - convertedTrajectory.getY(-1)) > 3) {
             return convertedTrajectory.addPoint(newPosition);
+        }
 
         return false;
     }
