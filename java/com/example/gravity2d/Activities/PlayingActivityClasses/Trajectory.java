@@ -9,12 +9,12 @@ import com.example.gravity2d.PhxEngine.Coordinate;
  *  @version 1.0
  */
 public class Trajectory {
-    float x[];
-    float y[];
+    private float x[];
+    private float y[];
     // Длина массивов x и y (могут быть больше длины траектории)
-    int size;
+    private int size;
     // Длина траектории, т.е. количество точек
-    int length;
+    private int length;
 
     public Trajectory() {
         x = new float[100];

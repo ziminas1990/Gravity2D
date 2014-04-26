@@ -120,8 +120,8 @@ public class SurfaceConverter {
                              logicPoint.y() * phxMatrix[4] + phxMatrix[5]);
     }
 
-    public Coordinate getPhxPoint(double x, double y) {
-        return new Coordinate(x * phxMatrix[0] + phxMatrix[2], y * phxMatrix[4] + phxMatrix[5]);
+    public void convertToPhx(double x, double y, Coordinate point) {
+        point.setPosition(x * phxMatrix[0] + phxMatrix[2], y * phxMatrix[4] + phxMatrix[5]);
     }
 
     public Coordinate getPhxPoint(Coordinate logicPoint) {
@@ -134,8 +134,8 @@ public class SurfaceConverter {
                              phxPoint.y() * lgcMatrix[4] + lgcMatrix[5]);
     }
 
-    public Coordinate getLogicPoint(double x, double y) {
-        return new Coordinate(x * lgcMatrix[0] + lgcMatrix[2], y * lgcMatrix[4] + lgcMatrix[5]);
+    public void convertToLogic(double x, double y, Coordinate point) {
+        point.setPosition(x * lgcMatrix[0] + lgcMatrix[2], y * lgcMatrix[4] + lgcMatrix[5]);
     }
 
     public Coordinate getLogicPoint(Coordinate phxPoint) {
