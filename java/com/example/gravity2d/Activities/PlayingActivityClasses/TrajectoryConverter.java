@@ -122,24 +122,6 @@ public class TrajectoryConverter {
         }
     }
 
-    private void getPhxBorders(double borderX[], double borderY[]) {
-        Coordinate phxGrid[] = mConverter.getPhxGrid();
-        if(phxGrid[0].x() < phxGrid[1].x()) {
-            borderX[0] = phxGrid[0].x();
-            borderX[1] = phxGrid[1].x();
-        } else {
-            borderX[0] = phxGrid[1].x();
-            borderX[1] = phxGrid[0].x();
-        }
-        if(phxGrid[0].y() < phxGrid[1].y()) {
-            borderY[0] = phxGrid[0].y();
-            borderY[1] = phxGrid[1].y();
-        } else {
-            borderY[0] = phxGrid[1].y();
-            borderY[1] = phxGrid[0].y();
-        }
-    }
-
     /**
      * Производит конвертирование траектории trajectory
      * @param trajectory Траектория, требующая конвертации
@@ -148,11 +130,6 @@ public class TrajectoryConverter {
     private void convertTrajectory(Trajectory trajectory, Trajectory convertedTrajectory) {
         if (convertedTrajectory.getLength() != 0)
             convertedTrajectory.clear();
-
-        // Определим физические границы виджета (для отсеивания неугодных точек):
-        double borderX[] = new double[2];
-        double borderY[] = new double[2];
-        getPhxBorders(borderX, borderY);
 
         Coordinate prevPoint = new Coordinate();
         Coordinate phxPoint = new Coordinate();
@@ -167,10 +144,7 @@ public class TrajectoryConverter {
             1. Точка в пределах экрана
             2. Расстояние от соседней точки на экране - не менее трёх пикселей (примерно)
              */
-            if (// Точка в пределах экрана:
-                (phxPoint.x() > borderX[0] && phxPoint.x() < borderX[1] &&
-                phxPoint.y() > borderY[0] && phxPoint.y() < borderY[1]) &&
-                // Расстояние до предыдущей точки - не менее трёх пикселей
+            if (// Расстояние до предыдущей точки - не менее трёх пикселей
                 (prevPoint == null ||
                 Math.abs(phxPoint.x() - prevPoint.x()) > 3 ||
                 Math.abs(phxPoint.y() - prevPoint.y()) > 3)) {
