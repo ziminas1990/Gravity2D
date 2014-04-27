@@ -144,10 +144,10 @@ public class TrajectoryConverter {
             1. Точка в пределах экрана
             2. Расстояние от соседней точки на экране - не менее трёх пикселей (примерно)
              */
-            if (// Расстояние до предыдущей точки - не менее трёх пикселей
+            if (// Расстояние до предыдущей точки - не менее десяти пикселей
                 (prevPoint == null ||
-                Math.abs(phxPoint.x() - prevPoint.x()) > 3 ||
-                Math.abs(phxPoint.y() - prevPoint.y()) > 3)) {
+                Math.abs(phxPoint.x() - prevPoint.x()) > 10 ||
+                Math.abs(phxPoint.y() - prevPoint.y()) > 10)) {
 
                 convertedTrajectory.addPoint(phxPoint);
                 prevPoint.setPosition(phxPoint);
@@ -178,8 +178,8 @@ public class TrajectoryConverter {
 
         if (// Расстояние до предыдущей точки - не менее трёх пикселей
             convertedTrajectory.getLength() == 0 ||
-            Math.abs(newPosition.x() - convertedTrajectory.getX(-1)) > 3 ||
-            Math.abs(newPosition.y() - convertedTrajectory.getY(-1)) > 3) {
+            Math.abs(newPosition.x() - convertedTrajectory.getX(-1)) > 2 ||
+            Math.abs(newPosition.y() - convertedTrajectory.getY(-1)) > 2) {
             return convertedTrajectory.addPoint(newPosition);
         }
 

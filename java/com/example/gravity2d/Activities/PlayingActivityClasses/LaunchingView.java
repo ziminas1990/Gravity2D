@@ -105,7 +105,7 @@ public class LaunchingView extends SceneView
             if (id != 0) {
                 synchronized (mTrajectories) {
                     if (!mTrajectories.trajectoryIsExist(id))
-                        mTrajectories.addTrajectory(id, new Vector<Coordinate>());
+                        mTrajectories.addTrajectory(id);
                     mTrajectories.addPoint(id, mMachine.getUpdatedPosition());
                 }
             }

@@ -241,8 +241,8 @@ public class PlayingActivity extends Activity
          T = S / P
          */
 
-        final int interval = 50; // N - Период таймера (ms)
-        final double precision = 0.1; // P - эвристический коэффициент точности
+        final int interval = 100; // N - Период таймера (ms)
+        final double precision = 0.2; // P - эвристический коэффициент точности
 
         mPhxEvent = new TimerTask() {
             @Override

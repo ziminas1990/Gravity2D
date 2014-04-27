@@ -21,9 +21,7 @@ public class KinematicsEngine implements PhxEngineInterface {
 	@Override // PhxEngineInterface
 	public void SimulationCircle(double interval) {
 		double seconds = interval / 1000.0;
-		Iterator<KinematicsObject> itObj = mObjects.iterator();
-		while(itObj.hasNext()) {
-			KinematicsObject object = itObj.next();
+        for(KinematicsObject object : mObjects) {
 			Coordinate position = object.Position();
 			double x = position.x();
 			double y = position.y();
