@@ -15,7 +15,15 @@ public class NewtonObject extends KinematicsObject
 	protected double mWeight;
 	public double Weight() { return mWeight; }
 	public void setWeight(double weight) { mWeight = weight; }
-		
+
+    // Дополнительные внешние силы
+    private Coordinate mExternalForces;
+    public Coordinate ExternalForces() { return  mExternalForces; }
+    public void addExternalForces(Coordinate force) {
+        mExternalForces.addVector(force);
+    }
+
+
 	// Является ли объект статичным (действуют ли на него внешние силы)
 	protected boolean mIsStatic;
 	public boolean isStatic() { return mIsStatic; }
@@ -24,12 +32,14 @@ public class NewtonObject extends KinematicsObject
 	public NewtonObject(double weight) {
 		super();
 		mWeight = weight;
+        mExternalForces = new Coordinate();
         mIsStatic = false;
 	}
 	
 	public NewtonObject(double weight, Coordinate position) {
 		super(position);
 		mWeight = weight;
+        mExternalForces = new Coordinate();
         mIsStatic = false;
 	}
 	

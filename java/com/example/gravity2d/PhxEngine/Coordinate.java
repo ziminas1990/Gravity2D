@@ -37,6 +37,15 @@ public class Coordinate implements Serializable {
 	}
 
     /**
+     * Прибьавляет к текущему объекту, представленному как вектор, другой вектор
+     * @param vector Прибавляемый вектор
+     */
+    public void addVector(Coordinate vector) {
+        mX += vector.mX;
+        mY += vector.mY;
+    }
+
+    /**
      * @return Принимая точку за координаты вектора, возвращает длину вектора
      */
     public double length() { return Math.sqrt(mX * mX + mY * mY); }

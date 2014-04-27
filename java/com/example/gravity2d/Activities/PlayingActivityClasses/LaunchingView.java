@@ -6,7 +6,6 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.os.Bundle;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.MotionEvent;
 
 import com.example.gravity2d.Activities.Common.AbstractStateMachine;
@@ -16,8 +15,6 @@ import com.example.gravity2d.PhxEngine.Coordinate;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
-import java.util.Vector;
 
 /**
  * Класс, реализующий инструменты для настройки параметров запуска, а так же для отображения
@@ -106,7 +103,7 @@ public class LaunchingView extends SceneView
                 synchronized (mTrajectories) {
                     if (!mTrajectories.trajectoryIsExist(id))
                         mTrajectories.addTrajectory(id);
-                    mTrajectories.addPoint(id, mMachine.getUpdatedPosition());
+                    mTrajectories.addPoint(id, mMachine.getCurrentPosition());
                 }
             }
 
@@ -118,16 +115,34 @@ public class LaunchingView extends SceneView
     @Override  //View
     public boolean onTouchEvent(MotionEvent event) {
         super.onTouchEvent(event);
-        if (mMachine.getState() == PlayingMachine.statePreparation ||
-            mMachine.getState() == PlayingMachine.stateOnParamsUpdate) {
+        if(event.getPointerCount() != 1) {
+            mMachine.engineTurnOff();
+            return true;
+        }
 
-            int action = event.getAction();
-            if (action == MotionEvent.ACTION_DOWN ||
-                action == MotionEvent.ACTION_MOVE) {
-                // Редактирование параметров запуска
-                return onParametersEditing(event);
+        int action = event.getAction();
+        if(mMachine.isLaunched()) {
+            // Редактирование вектора тяги
+            if (action == MotionEvent.ACTION_DOWN) {
+                mMachine.engineTurnOn();
+                mConverter.convertToLogic(event.getX(), event.getY(),
+                                          mMachine.EngineDirectionPoint());
+            } else if (action == MotionEvent.ACTION_MOVE) {
+                mConverter.convertToLogic(event.getX(), event.getY(),
+                                          mMachine.EngineDirectionPoint());
             } else if (event.getAction() == MotionEvent.ACTION_UP) {
                 // Редактирование завершено и производится запуск
+                mMachine.engineTurnOff();
+                return true;
+            }
+
+            return true;
+        } else if(mMachine.isPreparing()) {
+            // Редактирования параметра запуска
+            if (action == MotionEvent.ACTION_DOWN ||
+                action == MotionEvent.ACTION_MOVE) {
+                return onParametersEditing(event);
+            } else if (event.getAction() == MotionEvent.ACTION_UP) {
                 mMachine.onLaunched(mMachine.getLaunchVelocity());
                 return true;
             }
@@ -170,6 +185,8 @@ public class LaunchingView extends SceneView
             return;
         }
 
+        Coordinate TmpPoint = new Coordinate();
+
         // Отобразим все траектории
         Paint paint = new Paint();
         paint.setStyle(Paint.Style.STROKE);
@@ -177,7 +194,6 @@ public class LaunchingView extends SceneView
         canvas.drawPaint(paint);
 
         Trajectory trajectory = null;
-        Coordinate prevPoint = null;
 
         // Отрисовываем траекторию предыдущих запусков
         paint.setColor(Color.rgb(128, 128, 0));
@@ -199,7 +215,6 @@ public class LaunchingView extends SceneView
 
         // Отрисовываем траекторию текущего запуска:
         paint.setColor(Color.rgb(255, 255, 0));
-        prevPoint = null;
         trajectory = mTrajectories.getConvertedTrajectory(mScene.getCurrentLaunch());
 
         if (trajectory != null) {
@@ -209,6 +224,18 @@ public class LaunchingView extends SceneView
                 int length = trajectory.getLength();
                 for(int i = 0; i < length - 1; i++)
                     canvas.drawLine(arrX[i], arrY[i], arrX[i+1], arrY[i+1], paint);
+                float x = arrX[length - 1];
+                float y = arrY[length - 1];
+
+                // отобразим вектор тяги двигателя (ускорение от двигателя):
+                if(mMachine.engineIsOn()) {
+                    paint.setColor(Color.rgb(153, 217, 234));
+                    paint.setStrokeWidth(3);
+                    mConverter.convertVectorToPhx(mMachine.EngineForce(), TmpPoint);
+                    Coordinate.normilizeVector(TmpPoint);
+                    canvas.drawLine(x, y, (float) (x + TmpPoint.x() * 200),
+                            (float) (y + TmpPoint.y() * 200), paint);
+                }
             }
         }
 

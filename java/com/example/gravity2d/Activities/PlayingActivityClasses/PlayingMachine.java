@@ -3,7 +3,6 @@ package com.example.gravity2d.Activities.PlayingActivityClasses;
 import android.os.Bundle;
 
 import com.example.gravity2d.Activities.Common.StateMachine;
-import com.example.gravity2d.ModelObjects.ModelPlanet;
 import com.example.gravity2d.PhxEngine.Coordinate;
 
 /**
@@ -25,10 +24,27 @@ public class PlayingMachine extends StateMachine {
     public static long stateOnPositionUpdate = 4;
     public static long stateOnAllTargetsHited = 4;
     public static long stateOnFinished = 6;
+    // Изменение тех или иных величин в процессе полёта:
+    public static long stateEngineForceChanged = 7;
 
     private Coordinate mCurrentPosition;
     private Coordinate mLauncherVector;
     private double mTimeWrap;
+
+    // Управление объектом:
+    private boolean mEngineOn;                 // Определяет, включен ли двигатель
+    private Coordinate mEngineDirectionPoint; // Точка, к которой направлена тяга двигателя
+    private Coordinate mEngineForce;          // Сила, создаваемая двигателем
+
+    // В данный момент проводится запуск?
+    private boolean mIsLaunched;
+    private void inLaunching() { mIsLaunched = true; }
+    private void outOfLaunching() {
+        mIsLaunched = false;
+        engineTurnOff();
+    }
+    // В данный момент производится подготовка к запуску?
+    private boolean mIsPreparing;
 
     public PlayingMachine () {
         super(MACHINE_TYPE_ID);
@@ -37,6 +53,13 @@ public class PlayingMachine extends StateMachine {
         mCurrentPosition = null;
         mLauncherVector = null;
         mTimeWrap = 1;
+
+        mEngineOn = false;
+        mEngineDirectionPoint = new Coordinate();
+        mEngineForce = new Coordinate();
+
+        outOfLaunching();
+        mIsPreparing = false;
     }
 
     @Override
@@ -44,6 +67,14 @@ public class PlayingMachine extends StateMachine {
         super.saveToBundle(data, prefix + "[StateMachine]");
         data.putSerializable(prefix + "mCurrentPosition", mCurrentPosition);
         data.putSerializable(prefix + "mLauncherVector", mLauncherVector);
+        data.putDouble(prefix + "mTimeWrap", mTimeWrap);
+
+        data.putBoolean(prefix + "mEngineOn", mEngineOn);
+        data.putSerializable(prefix + "mEngineDirectionPoint", mEngineDirectionPoint);
+        data.putSerializable(prefix + "mEngineForce", mEngineForce);
+
+        data.putBoolean(prefix + "mIsLaunched", mIsLaunched);
+        data.putBoolean(prefix + "mIsPreparing", mIsPreparing);
     }
 
     @Override
@@ -51,11 +82,25 @@ public class PlayingMachine extends StateMachine {
         super.loadFromBundle(data, prefix + "[StateMachine]");
         mCurrentPosition = (Coordinate)data.getSerializable(prefix + "mCurrentPosition");
         mLauncherVector = (Coordinate)data.getSerializable(prefix + "mLauncherVector");
+        mTimeWrap = data.getDouble(prefix + "mTimeWrap");
+
+        mEngineOn = data.getBoolean(prefix + "mEngineOn");
+        mEngineDirectionPoint = (Coordinate)data.getSerializable(prefix + "mEngineDirectionPoint");
+        mEngineForce = (Coordinate)data.getSerializable(prefix + "mEngineForce");
+
+        mIsLaunched = data.getBoolean(prefix + "mIsLaunched");
+        mIsPreparing = data.getBoolean(prefix + "mIsPreparing");
     }
 
     public void onPreparing() {
+        mIsPreparing = true;
         super.setState(statePreparation);
     }
+
+    /**
+     * @return Возвращает, проводится ли в данный момент подготовка к запуску?
+     */
+    public boolean isPreparing() { return mIsPreparing; }
 
     /**
      * Функция вызывается, когда пользователь изменил параметры запуска (вектор скорости)
@@ -71,8 +116,15 @@ public class PlayingMachine extends StateMachine {
      */
     public void onLaunched(Coordinate launcherVector) {
         mLauncherVector = launcherVector;
+        inLaunching();
+        mIsPreparing = false;
         super.setState(stateOnLaunched);
     }
+
+    /**
+     * @return Возвращает, проводится ли в данный момент запуск объекта?
+     */
+    public  boolean isLaunched() { return mIsLaunched; }
 
     /**
      * @return Возвращает текущий вектор скорости, либо null, если текущее состояние машины
@@ -95,15 +147,16 @@ public class PlayingMachine extends StateMachine {
 
     /**
      * @return Возвращает обновлённую позицию объекта (переданную в onPositionUpdate), либо
-     * null, если текущее состояние машины отличается от stateOnPositionUpdate
+     * null, если текущее состояние машины отличается от isLaunched
      */
-    public Coordinate getUpdatedPosition() {
-        if(getState() != stateOnPositionUpdate)
+    public Coordinate getCurrentPosition() {
+        if(!mIsLaunched)
             return null;
         return mCurrentPosition;
     }
 
     public boolean onAllTargetsAreHited() {
+        outOfLaunching();
         return super.setState(stateOnAllTargetsHited);
     }
 
@@ -111,6 +164,8 @@ public class PlayingMachine extends StateMachine {
      * Функция вызывается, когда расчёт траектории прекращается (например, столкновение с планетой)
      */
     public void onFinished() {
+        outOfLaunching();
+        mIsPreparing = false;
         super.setState(stateOnFinished);
     }
 
@@ -126,8 +181,46 @@ public class PlayingMachine extends StateMachine {
      */
     public double getTimeWrap() { return mTimeWrap; }
 
+
+    // Включение двигателя
+    public void engineTurnOn() {
+        if(!mIsLaunched)
+            return;
+        mEngineOn = true;
+    }
+
+    /**
+     * Сообщает об изменении вектора ускорения, создаваемого двигателем
+     * @param acceleration
+     */
+    public void onEngineForceChanged(Coordinate acceleration) {
+        if(!mEngineOn)
+            return;
+        mEngineForce.setPosition(acceleration);
+        super.setState(stateEngineForceChanged);
+    }
+
+    public  void engineTurnOff() { mEngineOn = false; }
+
+    /**
+     * @return Возвращает вектор силы, создаваемой двигателем, либо null, если его нет
+     */
+    public Coordinate EngineForce() {
+        if(!mEngineOn)
+            return null;
+        return mEngineForce;
+    }
+
+    public Coordinate EngineDirectionPoint() {
+        return mEngineDirectionPoint;
+    }
+
+    public boolean engineIsOn() { return mEngineOn; }
+
     @Override  // AbstractStateMachine
     public boolean reset() {
+        outOfLaunching();
+        mIsPreparing = false;
         return super.setState(stateDefault);
     }
 

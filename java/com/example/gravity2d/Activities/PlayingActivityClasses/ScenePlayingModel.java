@@ -111,7 +111,7 @@ public class ScenePlayingModel extends SceneModel
             mCurrentLaunchId = mNextLaunchId++;
         } else if(newState == PlayingMachine.stateOnPositionUpdate) {
             if(mCurrentLaunch != null)
-                mCurrentLaunch.add(new Coordinate(mMachine.getUpdatedPosition()));
+                mCurrentLaunch.add(new Coordinate(mMachine.getCurrentPosition()));
         } else if(newState == PlayingMachine.stateOnFinished) {
             mCurrentLaunch = null;
             mCurrentLaunchId = 0;

@@ -3,8 +3,6 @@ package com.example.gravity2d.Activities;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -83,7 +81,7 @@ public class PlayingActivity extends Activity
         mPhxEngine = new NewtonEngine();
         mPhxTimer = new Timer();
         mPhxEvent = null;
-        mLaunchedObject = new NewtonObject(1);
+        mLaunchedObject = new NewtonObject(0.5);
         loadSceneToPhxEngine(mScene);
 
         mGUIUpdateTimer = new Timer();
@@ -224,6 +222,13 @@ public class PlayingActivity extends Activity
         return false;
     }
 
+    private void calculateEngineForce() {
+
+        Coordinate F = mMachine.EngineForce();
+        Coordinate.initializeVector(F, mLaunchedObject.Position(), mMachine.EngineDirectionPoint());
+        Coordinate.normilizeVector(F);
+        mMachine.onEngineForceChanged(F);
+    }
 
     private void runPhxEngineTimer() {
         /**
@@ -255,8 +260,18 @@ public class PlayingActivity extends Activity
                 double circle_interval = circles_count / precision;
                 // Запускаем вычисление
                 Coordinate prevPosition = new Coordinate(mLaunchedObject.Position());
-                for(int i = 0; i < circles_count; i++)
-                    mPhxEngine.SimulationCircle(circle_interval);
+                // Условие вынесено из циклов ради оптимизации
+                if(mMachine.engineIsOn()) {
+                    calculateEngineForce();
+                    Coordinate engineForce = mMachine.EngineForce();
+                    for (int i = 0; i < circles_count; i++) {
+                        mLaunchedObject.addExternalForces(engineForce);
+                        mPhxEngine.SimulationCircle(circle_interval);
+                    }
+                } else {
+                    for (int i = 0; i < circles_count; i++)
+                        mPhxEngine.SimulationCircle(circle_interval);
+                }
 
                 mMachine.onPositionUpdate(mLaunchedObject.Position());
                 if(checkForCrash())

@@ -40,7 +40,7 @@ public class NewtonEngine extends KinematicsEngine
 	 */
 	private void findAccelerationForObject(NewtonObject object, Coordinate acceleration)
 	{
-		netForce.setPosition(0, 0);
+		netForce = object.ExternalForces();
         double objectWeight = object.Weight();
         for(NewtonObject gravityObject : mObjects) {
             if(gravityObject == object)
@@ -58,6 +58,7 @@ public class NewtonEngine extends KinematicsEngine
         // Домножение на 0.001, так как нам нужно ускорение, выраженное в км/с^2, а не в метрах
 		acceleration.setPosition(netForce.x() * 0.001 / objectWeight,
 			                     netForce.y() * 0.001 / objectWeight);
+        netForce.setPosition(0, 0);
 	}
 	
 	public void addObject(NewtonObject object) {

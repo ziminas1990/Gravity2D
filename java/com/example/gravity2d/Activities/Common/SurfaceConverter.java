@@ -143,6 +143,10 @@ public class SurfaceConverter {
                               phxPoint.y() * lgcMatrix[4] + lgcMatrix[5]);
     }
 
+    public void convertVectorToPhx(Coordinate logicVector, Coordinate phxVector) {
+        phxVector.setPosition(logicVector.x() * phxMatrix[0], logicVector.y() * phxMatrix[4]);
+    }
+
     public double convertToPhx(double metric) {
         // Здесь предполагается, что соотношение как высоты так и ширины
         // логической и физической системы координат одинаковое
