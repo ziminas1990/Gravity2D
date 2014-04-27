@@ -115,6 +115,13 @@ public class SurfaceConverter {
         calculateMatrix(phxMatrix, mLogicGrid, mPhxGrid);
     }
 
+    public void convertToPhx(float fromX[], float fromY[], float toX[], float toY[], int length) {
+        for(int i = 0; i < length; i++) {
+            toX[i] = (float)(fromX[i] * phxMatrix[0] + phxMatrix[2]);
+            toY[i] = (float)(fromY[i] * phxMatrix[4] + phxMatrix[5]);
+        }
+    }
+
     public void convertToPhx(Coordinate logicPoint, Coordinate phxPoint) {
         phxPoint.setPosition(logicPoint.x() * phxMatrix[0] + phxMatrix[2],
                              logicPoint.y() * phxMatrix[4] + phxMatrix[5]);

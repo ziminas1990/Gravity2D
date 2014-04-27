@@ -31,12 +31,7 @@ public class TrajectoryConverter {
     /// Карта для сопоставления уникального идентификатора с траекторией в системе координат экрана
     private HashMap<Integer, Trajectory> mConvertedTrajectories;
 
-    /// Карта для сопоставления уникального идентификатора с доп. информацией о траектории
-    class ExtraData {
-        // Единичный вектор, направленый от N-1 к N-2 точки траектории, причём N - последняя точка
-        // Используется для оптимизации
-        Coordinate reverseVector;
-    }
+    private Trajectory mTemplTrajectory;
 
     /// Конвертер координат из логической СК в физическую СК
     private SurfaceConverter mConverter;
@@ -49,6 +44,7 @@ public class TrajectoryConverter {
         mConverter = converter;
         mConvertedTrajectories = new HashMap<Integer, Trajectory>();
         mTrajectories = new HashMap<Integer, Trajectory>();
+        mTemplTrajectory = new Trajectory();
     }
 
     public void saveToBundle(Bundle data, String prefix) {
@@ -131,26 +127,27 @@ public class TrajectoryConverter {
         if (convertedTrajectory.getLength() != 0)
             convertedTrajectory.clear();
 
-        Coordinate prevPoint = new Coordinate();
-        Coordinate phxPoint = new Coordinate();
         int length = trajectory.getLength();
-        float allX[] = trajectory.getAllX();
-        float allY[] = trajectory.getAllY();
-        for (int i = 0; i < length; i++) {
-            mConverter.convertToPhx(allX[i], allY[i], phxPoint);
+        if(length == 0)
+            return;
 
-            /*
+        mTemplTrajectory.clear();
+        mTemplTrajectory.expand(length);
+        float allX[] = mTemplTrajectory.getAllX();
+        float allY[] = mTemplTrajectory.getAllY();
+        mConverter.convertToPhx(trajectory.getAllX(), trajectory.getAllY(), allX, allY, length);
+
+        /*
             Условие для оптимизации. Точка добавляется только если:
-            1. Точка в пределах экрана
-            2. Расстояние от соседней точки на экране - не менее трёх пикселей (примерно)
-             */
-            if (// Расстояние до предыдущей точки - не менее десяти пикселей
-                (prevPoint == null ||
-                Math.abs(phxPoint.x() - prevPoint.x()) > 10 ||
-                Math.abs(phxPoint.y() - prevPoint.y()) > 10)) {
-
-                convertedTrajectory.addPoint(phxPoint);
-                prevPoint.setPosition(phxPoint);
+            1. Расстояние от соседней точки на экране - не менее трёх пикселей (примерно)
+        */
+        convertedTrajectory.addPoint(allX[0], allY[0]);
+        int lastAddedPoint = 0;
+        for (int i = 1; i < length; i++) {
+            if (Math.abs(allX[i] - allX[lastAddedPoint]) > 10 ||
+                    Math.abs(allY[i] - allY[lastAddedPoint]) > 10) {
+                convertedTrajectory.addPoint(allX[i], allY[i]);
+                lastAddedPoint = i;
             }
         }
     }
