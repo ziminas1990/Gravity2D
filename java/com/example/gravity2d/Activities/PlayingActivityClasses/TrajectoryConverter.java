@@ -144,8 +144,8 @@ public class TrajectoryConverter {
         convertedTrajectory.addPoint(allX[0], allY[0]);
         int lastAddedPoint = 0;
         for (int i = 1; i < length; i++) {
-            if (Math.abs(allX[i] - allX[lastAddedPoint]) > 10 ||
-                    Math.abs(allY[i] - allY[lastAddedPoint]) > 10) {
+            if (Math.abs(allX[i] - allX[lastAddedPoint]) > 15 ||
+                    Math.abs(allY[i] - allY[lastAddedPoint]) > 15) {
                 convertedTrajectory.addPoint(allX[i], allY[i]);
                 lastAddedPoint = i;
             }

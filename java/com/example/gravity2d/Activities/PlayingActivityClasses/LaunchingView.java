@@ -38,12 +38,16 @@ public class LaunchingView extends SceneView
     // Карта, сопоставляющая траектории в mScene с их вариантом, сконвертированным для
     // отображения в LaunchingView. Введена с целью оптимизации процесса отрисовки
     private TrajectoryConverter mTrajectories;
+    private int mCurrentLaunchId;
+    private int mPreviousLaunchId;
 
     private void init() {
         mMachine = null;
         mScene = null;
-        mTrajectories = new TrajectoryConverter(super.mConverter);
         isInvalidated = true;
+        mTrajectories = new TrajectoryConverter(super.mConverter);
+        mCurrentLaunchId = 0;
+        mPreviousLaunchId = 0;
     }
 
     public LaunchingView(Context context) {
@@ -97,16 +101,19 @@ public class LaunchingView extends SceneView
     public void onStateChanged(long oldState, long newState,
                                AbstractStateMachine machine)
     {
-        if(newState == PlayingMachine.stateOnPositionUpdate) {
-            Integer id = mScene.getCurrentLaunch();
-            if (id != 0) {
-                synchronized (mTrajectories) {
-                    if (!mTrajectories.trajectoryIsExist(id))
-                        mTrajectories.addTrajectory(id);
-                    mTrajectories.addPoint(id, mMachine.getCurrentPosition());
-                }
+        if(newState == PlayingMachine.stateOnLaunched) {
+            mCurrentLaunchId = mScene.getCurrentLaunch();
+            if (!mTrajectories.trajectoryIsExist(mCurrentLaunchId))
+                mTrajectories.addTrajectory(mCurrentLaunchId);
+        } else if(newState == PlayingMachine.stateOnPositionUpdate) {
+            synchronized (mTrajectories) {
+                mTrajectories.addPoint(mCurrentLaunchId, mMachine.getCurrentPosition());
             }
-
+        } else if(newState == PlayingMachine.stateOnFinished) {
+            if(mPreviousLaunchId != 0)
+                mTrajectories.removeTrajectory(mPreviousLaunchId);
+            mPreviousLaunchId = mCurrentLaunchId;
+            mCurrentLaunchId = 0;
         } else if(newState == PlayingMachine.stateOnParamsUpdate) {
             invalidate();
         }
@@ -170,6 +177,24 @@ public class LaunchingView extends SceneView
         return true;
     }
 
+    private void drawEngineForce(float engineX, float engineY, Canvas canvas, Paint paint) {
+        Coordinate TmpPoint = new Coordinate();
+        mConverter.convertVectorToPhx(mMachine.EngineForce(), TmpPoint);
+        Coordinate.normilizeVector(TmpPoint);
+        canvas.drawLine(engineX, engineY, (float) (engineX + TmpPoint.x() * 200),
+                (float) (engineY + TmpPoint.y() * 200), paint);
+    }
+
+    private void drawTrajectory(Trajectory trajectory, Canvas canvas, Paint paint) {
+        if(trajectory != null) {
+            float arrX[] = trajectory.getAllX();
+            float arrY[] = trajectory.getAllY();
+            int length = trajectory.getLength();
+            for (int i = 0; i < length - 1; i++)
+                canvas.drawLine(arrX[i], arrY[i], arrX[i + 1], arrY[i + 1], paint);
+        }
+    }
+
     /**
      * Занимается отрисовкой траекторий запуска
      */
@@ -185,56 +210,34 @@ public class LaunchingView extends SceneView
             return;
         }
 
-        Coordinate TmpPoint = new Coordinate();
-
-        // Отобразим все траектории
         Paint paint = new Paint();
         paint.setStyle(Paint.Style.STROKE);
         paint.setStrokeWidth(5);
         canvas.drawPaint(paint);
 
-        Trajectory trajectory = null;
-
-        // Отрисовываем траекторию предыдущих запусков
-        paint.setColor(Color.rgb(128, 128, 0));
         synchronized (mTrajectories) {
-            HashMap<Integer, Trajectory> allTrajectories =
-                    mTrajectories.getAllConverterTrajectories();
-            for (Map.Entry<Integer, Trajectory> entry : allTrajectories.entrySet()) {
-                Integer id = entry.getKey();
-                if (id.equals(mScene.getCurrentLaunch()))
-                    continue;
-                trajectory = entry.getValue();
-                float arrX[] = trajectory.getAllX();
-                float arrY[] = trajectory.getAllY();
-                int length = trajectory.getLength();
-                for(int i = 0; i < length - 1; i++)
-                    canvas.drawLine(arrX[i], arrY[i], arrX[i+1], arrY[i+1], paint);
+            // Отрисовываем траекторию предыдущего запуска
+            if(mPreviousLaunchId != 0) {
+                paint.setColor(Color.rgb(128, 128, 0));
+                drawTrajectory(mTrajectories.getConvertedTrajectory(mPreviousLaunchId),
+                               canvas, paint);
             }
-        }
 
-        // Отрисовываем траекторию текущего запуска:
-        paint.setColor(Color.rgb(255, 255, 0));
-        trajectory = mTrajectories.getConvertedTrajectory(mScene.getCurrentLaunch());
+            // Отрисовываем траекторию текущего запуска:
+            paint.setColor(Color.rgb(255, 255, 0));
+            if(mCurrentLaunchId != 0) {
+                Trajectory trajectory = mTrajectories.getConvertedTrajectory(mCurrentLaunchId);
 
-        if (trajectory != null) {
-            synchronized (trajectory) {
-                float arrX[] = trajectory.getAllX();
-                float arrY[] = trajectory.getAllY();
-                int length = trajectory.getLength();
-                for(int i = 0; i < length - 1; i++)
-                    canvas.drawLine(arrX[i], arrY[i], arrX[i+1], arrY[i+1], paint);
-                float x = arrX[length - 1];
-                float y = arrY[length - 1];
-
-                // отобразим вектор тяги двигателя (ускорение от двигателя):
-                if(mMachine.engineIsOn()) {
-                    paint.setColor(Color.rgb(153, 217, 234));
-                    paint.setStrokeWidth(3);
-                    mConverter.convertVectorToPhx(mMachine.EngineForce(), TmpPoint);
-                    Coordinate.normilizeVector(TmpPoint);
-                    canvas.drawLine(x, y, (float) (x + TmpPoint.x() * 200),
-                            (float) (y + TmpPoint.y() * 200), paint);
+                if (trajectory != null) {
+                    synchronized (trajectory) {
+                        drawTrajectory(trajectory, canvas, paint);
+                    }
+                    if (mMachine.engineIsOn() && trajectory.getLength() != 0) {
+                        paint.setColor(Color.rgb(153, 217, 234));
+                        paint.setStrokeWidth(3);
+                        // отобразим вектор тяги двигателя (ускорение от двигателя):
+                        drawEngineForce(trajectory.getX(-1), trajectory.getY(-1), canvas, paint);
+                    }
                 }
             }
         }
