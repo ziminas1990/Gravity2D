@@ -2,6 +2,8 @@ package com.example.gravity2d.Activities.PlayingActivityClasses;
 
 import com.example.gravity2d.PhxEngine.Coordinate;
 
+import java.util.Vector;
+
 /**
  * Класс создан с целью оптимизации отображения траекторий. Раньше для хранения траекторий
  * использовался Vector<Coordinate>.
@@ -13,14 +15,19 @@ public class Trajectory {
     private float y[];
     // Длина массивов x и y (могут быть больше длины траектории)
     private int size;
-    // Длина траектории, т.е. количество точек
+    // Полная длина траектории, т.е. длина массивов x и y
     private int length;
+    // Вектор хранит в себе начало и конец видимой части траектории
+    // элемент i (i кратно 2) содержит индекс первой точки видимого участка траектории, а i+1 -
+    // индекс последней точки видимого участка траектории
+    private Vector<Integer> mGaps;
 
     public Trajectory() {
         x = new float[100];
         y = new float[100];
         size = 100;
         length = 0;
+        mGaps = new Vector<Integer>();
     }
 
     public Trajectory(int length) {
@@ -28,6 +35,7 @@ public class Trajectory {
         y = new float[length];
         size = length;
         this.length = 0;
+        mGaps = new Vector<Integer>();
     }
 
     public float[] getAllX() { return x; }
@@ -43,9 +51,16 @@ public class Trajectory {
         return y[(index >= 0) ? index : length + index];
     }
 
+    /// @return Возвращает полную длину траектории (количество точек в массива getAllX и getAllY
     public int getLength() { return length; }
 
-    public void clear() { length = 0; }
+    /// @return Возвращает вектор разрывов
+    public Vector<Integer> getGaps() { return mGaps; }
+
+    public void clear() {
+        length = 0;
+        mGaps.clear();
+    }
 
     /**
      * Оптимизирует хранение траекторий в памяти (отрезает неиспользуемую часть массива)

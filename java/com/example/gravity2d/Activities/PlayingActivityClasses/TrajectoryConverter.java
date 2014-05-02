@@ -1,7 +1,6 @@
 package com.example.gravity2d.Activities.PlayingActivityClasses;
 
 import android.os.Bundle;
-import android.util.Log;
 
 import com.example.gravity2d.Activities.Common.SurfaceConverter;
 import com.example.gravity2d.PhxEngine.Coordinate;
@@ -137,17 +136,37 @@ public class TrajectoryConverter {
         float allY[] = mTemplTrajectory.getAllY();
         mConverter.convertToPhx(trajectory.getAllX(), trajectory.getAllY(), allX, allY, length);
 
+        Coordinate phxGrid[] = mConverter.getPhxGrid();
+        boolean isOutOfBounder = true;
+        Vector<Integer> gaps = convertedTrajectory.getGaps();
+        gaps.clear();
         /*
             Условие для оптимизации. Точка добавляется только если:
             1. Расстояние от соседней точки на экране - не менее трёх пикселей (примерно)
+            2. Точка находится на экране, а не за его границами
         */
-        convertedTrajectory.addPoint(allX[0], allY[0]);
         int lastAddedPoint = 0;
-        for (int i = 1; i < length; i++) {
-            if (Math.abs(allX[i] - allX[lastAddedPoint]) > 15 ||
-                    Math.abs(allY[i] - allY[lastAddedPoint]) > 15) {
-                convertedTrajectory.addPoint(allX[i], allY[i]);
-                lastAddedPoint = i;
+        for (int i = 0; i < length; i++) {
+            if ((Math.abs(allX[i] - allX[lastAddedPoint]) > 15 ||
+                Math.abs(allY[i] - allY[lastAddedPoint]) > 15)) {
+
+                if(allX[i] < phxGrid[0].x() || allX[i] > phxGrid[1].x() ||
+                   allY[i] < phxGrid[0].y() || allY[i] > phxGrid[1].y()) {
+                    if(!isOutOfBounder) {
+                        // Отмечаем разрыв
+                        convertedTrajectory.addPoint(allX[i], allY[i]);
+                        isOutOfBounder = true;
+                        gaps.add(convertedTrajectory.getLength() - 1);
+                    }
+                } else {
+                    if(isOutOfBounder) {
+                        if(i > 0)
+                            convertedTrajectory.addPoint(allX[i - 1], allY[i - 1]);
+                        isOutOfBounder = false;
+                    }
+                    convertedTrajectory.addPoint(allX[i], allY[i]);
+                    lastAddedPoint = i;
+                }
             }
         }
     }

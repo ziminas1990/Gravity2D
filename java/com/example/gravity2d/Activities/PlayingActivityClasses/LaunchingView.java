@@ -15,6 +15,7 @@ import com.example.gravity2d.PhxEngine.Coordinate;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Vector;
 
 /**
  * Класс, реализующий инструменты для настройки параметров запуска, а так же для отображения
@@ -138,7 +139,7 @@ public class LaunchingView extends SceneView
                 mConverter.convertToLogic(event.getX(), event.getY(),
                                           mMachine.EngineDirectionPoint());
             } else if (event.getAction() == MotionEvent.ACTION_UP) {
-                // Редактирование завершено и производится запуск
+                // Отключим-ка двигатель
                 mMachine.engineTurnOff();
                 return true;
             }
@@ -187,11 +188,19 @@ public class LaunchingView extends SceneView
 
     private void drawTrajectory(Trajectory trajectory, Canvas canvas, Paint paint) {
         if(trajectory != null) {
+            Vector<Integer> gaps = trajectory.getGaps();
             float arrX[] = trajectory.getAllX();
             float arrY[] = trajectory.getAllY();
             int length = trajectory.getLength();
-            for (int i = 0; i < length - 1; i++)
+            int lastGap = 0;
+            for(Integer nextGap: gaps) {
+                for (int i = lastGap; i < nextGap; i++)
+                    canvas.drawLine(arrX[i], arrY[i], arrX[i + 1], arrY[i + 1], paint);
+                lastGap = nextGap + 1;
+            }
+            for (int i = lastGap; i < length - 1; i++)
                 canvas.drawLine(arrX[i], arrY[i], arrX[i + 1], arrY[i + 1], paint);
+
         }
     }
 
@@ -227,16 +236,15 @@ public class LaunchingView extends SceneView
             paint.setColor(Color.rgb(255, 255, 0));
             if(mCurrentLaunchId != 0) {
                 Trajectory trajectory = mTrajectories.getConvertedTrajectory(mCurrentLaunchId);
-
                 if (trajectory != null) {
                     synchronized (trajectory) {
                         drawTrajectory(trajectory, canvas, paint);
-                    }
-                    if (mMachine.engineIsOn() && trajectory.getLength() != 0) {
-                        paint.setColor(Color.rgb(153, 217, 234));
-                        paint.setStrokeWidth(3);
-                        // отобразим вектор тяги двигателя (ускорение от двигателя):
-                        drawEngineForce(trajectory.getX(-1), trajectory.getY(-1), canvas, paint);
+                        if (mMachine.engineIsOn() && trajectory.getLength() != 0) {
+                            paint.setColor(Color.rgb(153, 217, 234));
+                            paint.setStrokeWidth(3);
+                            // отобразим вектор тяги двигателя (ускорение от двигателя):
+                            drawEngineForce(trajectory.getX(-1), trajectory.getY(-1), canvas, paint);
+                        }
                     }
                 }
             }
