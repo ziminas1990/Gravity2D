@@ -2,6 +2,7 @@ package com.example.gravity2d.Activities.PlayingActivityClasses;
 
 import com.example.gravity2d.PhxEngine.Coordinate;
 
+import java.io.Serializable;
 import java.util.Vector;
 
 /**
@@ -10,10 +11,10 @@ import java.util.Vector;
  *  @author ZiminAS
  *  @version 1.0
  */
-public class Trajectory {
+public class Trajectory implements Serializable {
     private float x[];
     private float y[];
-    // Длина массивов x и y (могут быть больше длины траектории)
+    // Длина массивов x и y (обычно больше длины траектории)
     private int size;
     // Полная длина траектории, т.е. длина массивов x и y
     private int length;

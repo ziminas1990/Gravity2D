@@ -22,8 +22,6 @@ import java.util.Vector;
  * @version 1.0
  */
 public class TrajectoryConverter {
-
-    // TODO: заменить на одну карту, где значение - пара из двух траекторий
     /// Карта для сопоставления уникального идентификатора с траекторией в логической системе
     /// координат
     private HashMap<Integer, Trajectory> mTrajectories;
