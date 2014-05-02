@@ -36,10 +36,10 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
 
-        <ProgressBar
-            android:id="@+id/playPgbFuel"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
+        <!--<ProgressBar-->
+            <!--android:id="@+id/playPgbFuel"-->
+            <!--android:layout_width="match_parent"-->
+            <!--android:layout_height="wrap_content" />-->
 
         <com.example.gravity2d.Activities.PlayingActivityClasses.LaunchingView
             android:id="@+id/playViewer"

@@ -1,7 +1,6 @@
 package com.example.gravity2d.PhxEngine;
 
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Set;
 
 public class NewtonEngine extends KinematicsEngine
@@ -13,34 +12,31 @@ public class NewtonEngine extends KinematicsEngine
 	// Вектора, который создаются в конструкторе и используется при расчётах
 	// (чтобы не создавать их каждый раз заного)
 	Coordinate forceVector;
-	Coordinate netForce;
 	
 	public NewtonEngine() {
         mObjects = new HashSet<NewtonObject>();
 		forceVector = new Coordinate();
-		netForce = new Coordinate();
 	}
 	
 	public void SimulationCircle(double interval)
 	{
-		for(NewtonObject object : mObjects) {
-			if(object == null || object.isStatic() == true)
-				continue;
-			findAccelerationForObject(object, object.Acceleration());
-		}
+		for(NewtonObject object : mObjects)
+			if(object.isStatic() == false)
+                addGravityForcesToObject(object);
 		super.SimulationCircle(interval);
+        for(NewtonObject object : mObjects)
+            object.ExternalForces().setPosition(0, 0);
 	}
 	
 	/**
-	 * Функция вычисляет ускорение для некоторого объекта. Функция возвращает
+	 * Функция вычисляет равнодействующую силу для некоторого объекта. Функция возвращает
 	 * результат через параметр (мне кажется, так будет быстрее, чем создавать
 	 * для результата новый объект)
 	 * @param object Объект
-	 * @param acceleration Вектор, в который будет записано ускорение
 	 */
-	private void findAccelerationForObject(NewtonObject object, Coordinate acceleration)
+	private void addGravityForcesToObject(NewtonObject object)
 	{
-		netForce = object.ExternalForces();
+        Coordinate netForce = object.ExternalForces();
         double objectWeight = object.Weight();
         for(NewtonObject gravityObject : mObjects) {
             if(gravityObject == object)
@@ -54,11 +50,6 @@ public class NewtonEngine extends KinematicsEngine
 			netForce.setPosition(netForce.x() + forceVector.x(),
 					             netForce.y() + forceVector.y());
 		}
-
-        // Домножение на 0.001, так как нам нужно ускорение, выраженное в км/с^2, а не в метрах
-		acceleration.setPosition(netForce.x() * 0.001 / objectWeight,
-			                     netForce.y() * 0.001 / objectWeight);
-        netForce.setPosition(0, 0);
 	}
 	
 	public void addObject(NewtonObject object) {

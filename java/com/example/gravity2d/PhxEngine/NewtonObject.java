@@ -49,4 +49,12 @@ public class NewtonObject extends KinematicsObject
 		mWeight = weight;
         mIsStatic = false;
 	}
+
+    @Override //PhxObjectInterface
+    public void Alive(double second) {
+        super.Alive(second);
+        // Домножение на 0.001, так как нам нужно ускорение, выраженное в км/с^2, а не в метрах
+        mAcceleration.setPosition(mExternalForces.x() * 0.001 / mWeight,
+                mExternalForces.y() * 0.001 / mWeight);
+    }
 }

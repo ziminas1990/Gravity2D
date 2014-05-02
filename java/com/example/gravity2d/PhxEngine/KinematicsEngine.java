@@ -21,22 +21,7 @@ public class KinematicsEngine implements PhxEngineInterface {
 	@Override // PhxEngineInterface
 	public void SimulationCircle(double interval) {
 		double seconds = interval / 1000.0;
-        for(KinematicsObject object : mObjects) {
-			Coordinate position = object.Position();
-			double x = position.x();
-			double y = position.y();
-			Coordinate velocity = object.Velocity();
-			Coordinate acceleration = object.Acceleration();
-			// Для оптимизации: умножим ускорение на время
-			double multAccXInterval = acceleration.x() * seconds;
-			double multAccYInterval = acceleration.y() * seconds;
-			// Вычисляем новую позицию
-			x += seconds * (velocity.x() + multAccXInterval * seconds / 2);
-			y += seconds * (velocity.y() + multAccYInterval * seconds / 2);
-			position.setPosition(x, y);
-			// Вычисляем новое значение скорости
-			velocity.setPosition(velocity.x() + multAccXInterval,
-					             velocity.y() + multAccYInterval);
-		}
+        for(KinematicsObject object : mObjects)
+			object.Alive(seconds);
 	}
 }

@@ -7,7 +7,7 @@ package com.example.gravity2d.PhxEngine;
  * @author ZiminAS
  * @version 1.0
  */
-public class KinematicsObject {
+public class KinematicsObject implements PhxObjectInterface {
 	// Позиция в пространстве
 	protected Coordinate mPosition;
 	// Вектор скорости
@@ -43,4 +43,20 @@ public class KinematicsObject {
 	
 	public Coordinate Velocity() { return mVelocity; }
 	public Coordinate Acceleration() { return mAcceleration; }
+
+    @Override   //PhxObjectInterface
+    public void Alive(double interval) {
+        double x = mPosition.x();
+        double y = mPosition.y();
+        // Для оптимизации: умножим ускорение на время
+        double multAccXInterval = mAcceleration.x() * interval;
+        double multAccYInterval = mAcceleration.y() * interval;
+        // Вычисляем новую позицию
+        x += interval * (mVelocity.x() + multAccXInterval * interval / 2);
+        y += interval * (mVelocity.y() + multAccYInterval * interval / 2);
+        mPosition.setPosition(x, y);
+        // Вычисляем новое значение скорости
+        mVelocity.setPosition(mVelocity.x() + multAccXInterval,
+                mVelocity.y() + multAccYInterval);
+    }
 }
