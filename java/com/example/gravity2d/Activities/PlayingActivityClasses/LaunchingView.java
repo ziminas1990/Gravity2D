@@ -72,6 +72,9 @@ public class LaunchingView extends SceneView
     }
 
     protected void onConverterChanged(double dx, double dy, double scale) {
+        if(isInEditMode())
+            return;
+
         synchronized (mTrajectories) {
             mTrajectories.updateAllTrajectories();
         }
@@ -124,7 +127,7 @@ public class LaunchingView extends SceneView
     public boolean onTouchEvent(MotionEvent event) {
         super.onTouchEvent(event);
         if(event.getPointerCount() != 1) {
-            mMachine.engineTurnOff();
+            mMachine.getSpaceShip().EngineTurnOff();
             return true;
         }
 
@@ -132,15 +135,15 @@ public class LaunchingView extends SceneView
         if(mMachine.isLaunched()) {
             // Редактирование вектора тяги
             if (action == MotionEvent.ACTION_DOWN) {
-                mMachine.engineTurnOn();
+                mMachine.getSpaceShip().EngineTurnOn();
                 mConverter.convertToLogic(event.getX(), event.getY(),
-                                          mMachine.EngineDirectionPoint());
+                        mMachine.getSpaceShip().getEngineDirectionPoint());
             } else if (action == MotionEvent.ACTION_MOVE) {
                 mConverter.convertToLogic(event.getX(), event.getY(),
-                                          mMachine.EngineDirectionPoint());
+                        mMachine.getSpaceShip().getEngineDirectionPoint());
             } else if (event.getAction() == MotionEvent.ACTION_UP) {
                 // Отключим-ка двигатель
-                mMachine.engineTurnOff();
+                mMachine.getSpaceShip().EngineTurnOff();
                 return true;
             }
 
@@ -180,7 +183,7 @@ public class LaunchingView extends SceneView
 
     private void drawEngineForce(float engineX, float engineY, Canvas canvas, Paint paint) {
         Coordinate TmpPoint = new Coordinate();
-        mConverter.convertVectorToPhx(mMachine.EngineForce(), TmpPoint);
+        mConverter.convertVectorToPhx(mMachine.getSpaceShip().getEngineForce(), TmpPoint);
         Coordinate.normilizeVector(TmpPoint);
         canvas.drawLine(engineX, engineY, (float) (engineX + TmpPoint.x() * 200),
                 (float) (engineY + TmpPoint.y() * 200), paint);
@@ -214,6 +217,9 @@ public class LaunchingView extends SceneView
         // добавлении новых траекторий
         super.onDraw(canvas);
 
+        if(isInEditMode())
+            return;
+
         if(mScene == null) {
             isInvalidated = true;
             return;
@@ -239,7 +245,7 @@ public class LaunchingView extends SceneView
                 if (trajectory != null) {
                     synchronized (trajectory) {
                         drawTrajectory(trajectory, canvas, paint);
-                        if (mMachine.engineIsOn() && trajectory.getLength() != 0) {
+                        if (mMachine.getSpaceShip().EngineIsOn() && trajectory.getLength() != 0) {
                             paint.setColor(Color.rgb(153, 217, 234));
                             paint.setStrokeWidth(3);
                             // отобразим вектор тяги двигателя (ускорение от двигателя):

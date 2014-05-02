@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.example.gravity2d.Activities.Common.AbstractStateMachine;
@@ -12,6 +13,7 @@ import com.example.gravity2d.Activities.Common.StateMachineClient;
 import com.example.gravity2d.Activities.PlayingActivityClasses.LaunchingView;
 import com.example.gravity2d.Activities.PlayingActivityClasses.PlayingMachine;
 import com.example.gravity2d.Activities.PlayingActivityClasses.ScenePlayingModel;
+import com.example.gravity2d.Activities.PlayingActivityClasses.SpaceShip;
 import com.example.gravity2d.Database.DataBaseHelper;
 import com.example.gravity2d.ModelObjects.ModelPlanet;
 import com.example.gravity2d.ModelObjects.ModelTarget;
@@ -44,11 +46,12 @@ public class PlayingActivity extends Activity
     private LaunchingView mViewer;
     private Button mBtnStart;
     private Button mBtnStop;
+    private ProgressBar mPgbFuel;
 
     private Timer mGUIUpdateTimer;
     private TimerTask mGUIUpdateEvent;
 
-    private NewtonObject mLaunchedObject;
+    private SpaceShip mShip;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,7 +60,8 @@ public class PlayingActivity extends Activity
 
         mStatus = (TextView)findViewById(R.id.playLblStatus);
 
-        mMachine = new PlayingMachine();
+        mShip = new SpaceShip(0.5);
+        mMachine = new PlayingMachine(mShip);
         mMachine.attachClient(this);
         mMachine.setTimeWrap(250);
         mMachine.reset();
@@ -76,12 +80,12 @@ public class PlayingActivity extends Activity
         mViewer.setScene(mScene);
         mBtnStart = (Button)findViewById(R.id.playBtnStart);
         mBtnStop = (Button)findViewById(R.id.playBtnStop);
+        mPgbFuel = (ProgressBar)findViewById(R.id.playPgbFuel);
         bindActivityViewsWithMachine();
 
         mPhxEngine = new NewtonEngine();
         mPhxTimer = new Timer();
         mPhxEvent = null;
-        mLaunchedObject = new NewtonObject(0.5);
         loadSceneToPhxEngine(mScene);
 
         mGUIUpdateTimer = new Timer();
@@ -93,7 +97,7 @@ public class PlayingActivity extends Activity
         mScene.saveToBundle(data, "mScene.");
         mViewer.saveToBundle(data, "mViewer.");
         mMachine.saveToBundle(data, "mMachine.");
-        data.putSerializable("mLaunchedObject", mLaunchedObject);
+        data.putSerializable("mShip", mShip);
     }
 
     @Override
@@ -103,9 +107,9 @@ public class PlayingActivity extends Activity
         mMachine.loadFromBundle(data, "mMachine.");
 
         //Подменяем запускаемый объект в физ. движке на тот, который использовался ранее:
-        mPhxEngine.removeObject(mLaunchedObject);
-        mLaunchedObject = (NewtonObject)data.getSerializable("mLaunchedObject");
-        mPhxEngine.addObject(mLaunchedObject);
+        mPhxEngine.removeObject(mShip);
+        mShip = (SpaceShip)data.getSerializable("mShip");
+        mPhxEngine.addObject(mShip);
 
         if(mMachine.getState() != PlayingMachine.stateOnPositionUpdate) {
             mMachine.notifyEverybodyAgain();
@@ -134,7 +138,7 @@ public class PlayingActivity extends Activity
         Iterator<ModelPlanet> I = planets.iterator();
         while(I.hasNext())
             mPhxEngine.addObject(I.next());
-        mPhxEngine.addObject(mLaunchedObject);
+        mPhxEngine.addObject(mShip);
     }
 
     /**
@@ -211,7 +215,7 @@ public class PlayingActivity extends Activity
      * @return Возвращает true, если объект столкнулся с планетой
      */
     private boolean checkForCrash() {
-        Coordinate position = mLaunchedObject.Position();
+        Coordinate position = mShip.Position();
         for(ModelPlanet planet : mScene.getAllPlanets()) {
             double dx = planet.Position().x() - position.x();
             double dy = planet.Position().y() - position.y();
@@ -224,10 +228,11 @@ public class PlayingActivity extends Activity
 
     private void calculateEngineForce() {
 
-        Coordinate F = mMachine.EngineForce();
-        Coordinate.initializeVector(F, mLaunchedObject.Position(), mMachine.EngineDirectionPoint());
+        Coordinate F = mMachine.getSpaceShip().getEngineForce();
+        Coordinate.initializeVector(F, mShip.Position(),
+                mMachine.getSpaceShip().getEngineDirectionPoint());
         Coordinate.normilizeVector(F);
-        mMachine.onEngineForceChanged(F);
+        mMachine.onEngineForceChanged();
     }
 
     private void runPhxEngineTimer() {
@@ -259,13 +264,13 @@ public class PlayingActivity extends Activity
                 // Рассчитываем T (circle_interval):
                 double circle_interval = circles_count / precision;
                 // Запускаем вычисление
-                Coordinate prevPosition = new Coordinate(mLaunchedObject.Position());
+                Coordinate prevPosition = new Coordinate(mShip.Position());
                 // Условие вынесено из циклов ради оптимизации
-                if(mMachine.engineIsOn()) {
+                if(mMachine.getSpaceShip().EngineIsOn()) {
                     calculateEngineForce();
-                    Coordinate engineForce = mMachine.EngineForce();
+                    Coordinate engineForce = mMachine.getSpaceShip().getEngineForce();
                     for (int i = 0; i < circles_count; i++) {
-                        mLaunchedObject.addExternalForces(engineForce);
+                        mShip.addExternalForces(engineForce);
                         mPhxEngine.SimulationCircle(circle_interval);
                     }
                 } else {
@@ -273,10 +278,10 @@ public class PlayingActivity extends Activity
                         mPhxEngine.SimulationCircle(circle_interval);
                 }
 
-                mMachine.onPositionUpdate(mLaunchedObject.Position());
+                mMachine.onPositionUpdate(mShip.Position());
                 if(checkForCrash())
                     mMachine.onFinished();
-                if(targetIsHited(prevPosition, mLaunchedObject.Position()) &&
+                if(targetIsHited(prevPosition, mShip.Position()) &&
                    allTargetsAreHited()) {
                    mMachine.onAllTargetsAreHited();
                    mMachine.onFinished();
@@ -319,8 +324,8 @@ public class PlayingActivity extends Activity
         if(newState == PlayingMachine.stateOnLaunched) {
             // запускаем объект
             mScene.prepareToNewLaunch();
-            mLaunchedObject.Position().setPosition(mScene.getLaunchPoint());
-            mLaunchedObject.Velocity().setPosition(mMachine.getLaunchVelocity());
+            mShip.Position().setPosition(mScene.getLaunchPoint());
+            mShip.Velocity().setPosition(mMachine.getLaunchVelocity());
             runPhxEngineTimer();
             runGuiUpdateTimer();
         } else if (newState == PlayingMachine.statePreparation) {

@@ -24,29 +24,28 @@ public class PlayingMachine extends StateMachine {
     public static long stateOnPositionUpdate = 4;
     public static long stateOnAllTargetsHited = 4;
     public static long stateOnFinished = 6;
-    // Изменение тех или иных величин в процессе полёта:
-    public static long stateEngineForceChanged = 7;
+    // Управление кораблём
+    public static long stateShipSelected = 7;
+    public static long stateEngineForceChanged = 9;
 
     private Coordinate mCurrentPosition;
     private Coordinate mLauncherVector;
     private double mTimeWrap;
 
-    // Управление объектом:
-    private boolean mEngineOn;                 // Определяет, включен ли двигатель
-    private Coordinate mEngineDirectionPoint; // Точка, к которой направлена тяга двигателя
-    private Coordinate mEngineForce;          // Сила, создаваемая двигателем
+    // Космический корабль
+    private SpaceShip mShip;
 
     // В данный момент проводится запуск?
     private boolean mIsLaunched;
     private void inLaunching() { mIsLaunched = true; }
     private void outOfLaunching() {
         mIsLaunched = false;
-        engineTurnOff();
+        mShip.EngineTurnOff();
     }
     // В данный момент производится подготовка к запуску?
     private boolean mIsPreparing;
 
-    public PlayingMachine () {
+    public PlayingMachine (SpaceShip ship) {
         super(MACHINE_TYPE_ID);
         super.mTag = "[PlayingMachine]";
         super.setState(stateDefault);
@@ -54,9 +53,7 @@ public class PlayingMachine extends StateMachine {
         mLauncherVector = null;
         mTimeWrap = 1;
 
-        mEngineOn = false;
-        mEngineDirectionPoint = new Coordinate();
-        mEngineForce = new Coordinate();
+        mShip = ship;
 
         outOfLaunching();
         mIsPreparing = false;
@@ -69,9 +66,7 @@ public class PlayingMachine extends StateMachine {
         data.putSerializable(prefix + "mLauncherVector", mLauncherVector);
         data.putDouble(prefix + "mTimeWrap", mTimeWrap);
 
-        data.putBoolean(prefix + "mEngineOn", mEngineOn);
-        data.putSerializable(prefix + "mEngineDirectionPoint", mEngineDirectionPoint);
-        data.putSerializable(prefix + "mEngineForce", mEngineForce);
+        data.putSerializable(prefix + "mShip", mShip);
 
         data.putBoolean(prefix + "mIsLaunched", mIsLaunched);
         data.putBoolean(prefix + "mIsPreparing", mIsPreparing);
@@ -84,9 +79,7 @@ public class PlayingMachine extends StateMachine {
         mLauncherVector = (Coordinate)data.getSerializable(prefix + "mLauncherVector");
         mTimeWrap = data.getDouble(prefix + "mTimeWrap");
 
-        mEngineOn = data.getBoolean(prefix + "mEngineOn");
-        mEngineDirectionPoint = (Coordinate)data.getSerializable(prefix + "mEngineDirectionPoint");
-        mEngineForce = (Coordinate)data.getSerializable(prefix + "mEngineForce");
+        mShip = (SpaceShip)data.getSerializable(prefix + "mShip");
 
         mIsLaunched = data.getBoolean(prefix + "mIsLaunched");
         mIsPreparing = data.getBoolean(prefix + "mIsPreparing");
@@ -181,41 +174,17 @@ public class PlayingMachine extends StateMachine {
      */
     public double getTimeWrap() { return mTimeWrap; }
 
-
-    // Включение двигателя
-    public void engineTurnOn() {
-        if(!mIsLaunched)
-            return;
-        mEngineOn = true;
-    }
+    /**
+     * @return Возвращает коасмический корабль, которым управляет игрок
+     */
+    public SpaceShip getSpaceShip() { return mShip; }
 
     /**
      * Сообщает об изменении вектора ускорения, создаваемого двигателем
-     * @param acceleration
      */
-    public void onEngineForceChanged(Coordinate acceleration) {
-        if(!mEngineOn)
-            return;
-        mEngineForce.setPosition(acceleration);
+    public void onEngineForceChanged() {
         super.setState(stateEngineForceChanged);
     }
-
-    public  void engineTurnOff() { mEngineOn = false; }
-
-    /**
-     * @return Возвращает вектор силы, создаваемой двигателем, либо null, если его нет
-     */
-    public Coordinate EngineForce() {
-        if(!mEngineOn)
-            return null;
-        return mEngineForce;
-    }
-
-    public Coordinate EngineDirectionPoint() {
-        return mEngineDirectionPoint;
-    }
-
-    public boolean engineIsOn() { return mEngineOn; }
 
     @Override  // AbstractStateMachine
     public boolean reset() {

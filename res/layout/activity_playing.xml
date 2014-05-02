@@ -3,7 +3,7 @@
     android:id="@+id/container"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.example.gravity2d.Activities.PlayingActivity"
+    tools:context=".Activities.PlayingActivity"
     tools:ignore="MergeRootFrame">
 
     <LinearLayout
@@ -33,6 +33,11 @@
 
         <TextView
             android:id="@+id/playLblStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+        <ProgressBar
+            android:id="@+id/playPgbFuel"
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
 
