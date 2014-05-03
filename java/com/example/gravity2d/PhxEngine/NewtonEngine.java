@@ -17,27 +17,32 @@ public class NewtonEngine extends KinematicsEngine
         mObjects = new HashSet<NewtonObject>();
 		forceVector = new Coordinate();
 	}
-	
-	public void SimulationCircle(double interval)
-	{
-		for(NewtonObject object : mObjects)
-			if(object.isStatic() == false)
-                addGravityForcesToObject(object);
-		super.SimulationCircle(interval);
-        for(NewtonObject object : mObjects)
-            object.ExternalForces().setPosition(0, 0);
-	}
-	
+
+    @Override // KinematicEngine
+    public void simulationCircle(double interval, int count) {
+        double subInterval = interval / count;
+        Coordinate gravityForce = new Coordinate(0, 0);
+        for(int i = 0; i < count; i++) {
+            // Добавляем ко всем объектам в качестве внешних сил силы гравитации
+            for (NewtonObject object : mObjects)
+                if (object.isStatic() == false) {
+                    calculateGravityForces(object, gravityForce);
+                    object.ExternalForces().addVector(gravityForce);
+                    object.Alive(subInterval);
+                    object.ExternalForces().subVector(gravityForce);
+                }
+        }
+    }
+
 	/**
-	 * Функция вычисляет равнодействующую силу для некоторого объекта. Функция возвращает
-	 * результат через параметр (мне кажется, так будет быстрее, чем создавать
-	 * для результата новый объект)
-	 * @param object Объект
+	 * Функция вычисляет силу гравитации, действующую на объект
+	 * @param object Объект, для которого высчитывается силя гравитации
+     * @param force Объект, в которй будет записан результат
 	 */
-	private void addGravityForcesToObject(NewtonObject object)
+	private void calculateGravityForces(NewtonObject object, Coordinate force)
 	{
-        Coordinate netForce = object.ExternalForces();
         double objectWeight = object.Weight();
+        force.setPosition(0, 0);
         for(NewtonObject gravityObject : mObjects) {
             if(gravityObject == object)
                 continue;
@@ -47,8 +52,8 @@ public class NewtonEngine extends KinematicsEngine
             double forceModule =
                     G * objectWeight * gravityObject.Weight() / (sqDistance * sqDistance);
 			forceVector.setPosition(forceVector.x() * forceModule, forceVector.y() * forceModule);
-			netForce.setPosition(netForce.x() + forceVector.x(),
-					             netForce.y() + forceVector.y());
+			force.setPosition(force.x() + forceVector.x(),
+					          force.y() + forceVector.y());
 		}
 	}
 	

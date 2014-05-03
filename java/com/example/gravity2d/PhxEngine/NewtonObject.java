@@ -57,4 +57,10 @@ public class NewtonObject extends KinematicsObject
         mAcceleration.setPosition(mExternalForces.x() * 0.001 / mWeight,
                 mExternalForces.y() * 0.001 / mWeight);
     }
+
+    @Override //PhxObjectInterface
+    public void relax(double interval) {
+        mExternalForces.setPosition(0, 0);
+        super.relax(interval);
+    }
 }

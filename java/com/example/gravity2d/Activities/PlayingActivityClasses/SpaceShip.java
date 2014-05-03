@@ -7,7 +7,7 @@ import java.io.Serializable;
 
 /**
  * Класс для представления космического корабля
- * Created by Алесандр on 02.05.2014.
+ * @author ZiminAS
  */
 public class SpaceShip extends NewtonObject implements Serializable {
     private boolean mEngineOn;                 // Определяет, включен ли двигатель
@@ -23,14 +23,14 @@ public class SpaceShip extends NewtonObject implements Serializable {
         mEngineOn = false;
         mEngineDirectionPoint = new Coordinate();
         mEngineForce = new Coordinate();
-        mMaxFuel = 1000000;
-        mFuel = 0;
+        mMaxFuel = 10000;
+        mFuel = 10000;
     }
 
     // Функции для работы с двигателем корабля
     public Coordinate getEngineDirectionPoint() { return mEngineDirectionPoint; }
     public Coordinate getEngineForce() { return mEngineForce; }
-    public void EngineTurnOn() { mEngineOn = true; }
+    public void EngineTurnOn() { if(mFuel > 0) mEngineOn = true; }
     public void EngineTurnOff() { mEngineOn = false; }
     public boolean EngineIsOn() { return mEngineOn; }
 
@@ -38,10 +38,33 @@ public class SpaceShip extends NewtonObject implements Serializable {
     public double Fuel() { return mFuel; }
     public double MaxFuel() { return mMaxFuel; }
     public void setFuel(double fuel) { mFuel = fuel; }
-    public void increaseFuel(double inc) {
-        mFuel -= inc;
-        if(mFuel < 0)
-            mFuel = 0;
+
+    private void calculateEngineForce() {
+        Coordinate.initializeVector(mEngineForce, mPosition, mEngineDirectionPoint);
+        Coordinate.normilizeVector(mEngineForce);
+    }
+
+    @Override   //PhxObjectInterface
+    public void prepare(double interval) {
+        // Имитируем тягу двигателя
+        if(mEngineOn && mMaxFuel > interval) {
+            calculateEngineForce();
+            addExternalForces(mEngineForce);
+        }
+        super.prepare(interval);
+    }
+
+    @Override
+    public void Alive(double interval) {
+        // Имитируем расход топлива
+        if(mEngineOn && mFuel > 0) {
+            mFuel -= interval;
+            if(mFuel < 0) {
+                mFuel = 0;
+                mEngineOn = false;
+            }
+        }
+        super.Alive(interval);
     }
 
 }

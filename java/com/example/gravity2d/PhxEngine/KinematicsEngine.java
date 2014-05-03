@@ -18,10 +18,23 @@ public class KinematicsEngine implements PhxEngineInterface {
         mObjects = new HashSet<KinematicsObject>();
     }
 
-	@Override // PhxEngineInterface
-	public void SimulationCircle(double interval) {
-		double seconds = interval / 1000.0;
+    @Override // PhxEngineInterface
+    public void startSimulation(double interval) {
         for(KinematicsObject object : mObjects)
-			object.Alive(seconds);
-	}
+            object.prepare(interval);
+    }
+
+    @Override // PhxEngineInterface
+    public void simulationCircle(double interval, int count) {
+        double subInterval = interval / count;
+        for(int i = 0; i < count; i++)
+            for(KinematicsObject object : mObjects)
+                object.Alive(subInterval);
+    }
+
+    @Override // PhxEngineInterface
+    public void endSimulation(double interval) {
+        for(KinematicsObject object : mObjects)
+            object.relax(interval);
+    }
 }

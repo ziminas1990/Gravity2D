@@ -45,6 +45,11 @@ public class KinematicsObject implements PhxObjectInterface {
 	public Coordinate Acceleration() { return mAcceleration; }
 
     @Override   //PhxObjectInterface
+    public void prepare(double interval) {
+        return;
+    }
+
+    @Override   //PhxObjectInterface
     public void Alive(double interval) {
         double x = mPosition.x();
         double y = mPosition.y();
@@ -52,11 +57,16 @@ public class KinematicsObject implements PhxObjectInterface {
         double multAccXInterval = mAcceleration.x() * interval;
         double multAccYInterval = mAcceleration.y() * interval;
         // Вычисляем новую позицию
-        x += interval * (mVelocity.x() + multAccXInterval * interval / 2);
-        y += interval * (mVelocity.y() + multAccYInterval * interval / 2);
+        x += interval * (mVelocity.x() + multAccXInterval / 2);
+        y += interval * (mVelocity.y() + multAccYInterval / 2);
         mPosition.setPosition(x, y);
         // Вычисляем новое значение скорости
         mVelocity.setPosition(mVelocity.x() + multAccXInterval,
                 mVelocity.y() + multAccYInterval);
+    }
+
+    @Override   //PhxObjectInterface
+    public void relax(double interval) {
+        return;
     }
 }

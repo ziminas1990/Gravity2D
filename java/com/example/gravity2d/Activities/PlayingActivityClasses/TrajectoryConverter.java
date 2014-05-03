@@ -145,8 +145,8 @@ public class TrajectoryConverter {
         */
         int lastAddedPoint = 0;
         for (int i = 0; i < length; i++) {
-            if ((Math.abs(allX[i] - allX[lastAddedPoint]) > 15 ||
-                Math.abs(allY[i] - allY[lastAddedPoint]) > 15)) {
+            if ((Math.abs(allX[i] - allX[lastAddedPoint]) > 10 ||
+                Math.abs(allY[i] - allY[lastAddedPoint]) > 10)) {
 
                 if(allX[i] < phxGrid[0].x() || allX[i] > phxGrid[1].x() ||
                    allY[i] < phxGrid[0].y() || allY[i] > phxGrid[1].y()) {

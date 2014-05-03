@@ -80,7 +80,9 @@ public class PlayingActivity extends Activity
         mViewer.setScene(mScene);
         mBtnStart = (Button)findViewById(R.id.playBtnStart);
         mBtnStop = (Button)findViewById(R.id.playBtnStop);
+
         mPgbFuel = (ProgressBar)findViewById(R.id.playPgbFuel);
+        mPgbFuel.setMax(1000);
         bindActivityViewsWithMachine();
 
         mPhxEngine = new NewtonEngine();
@@ -226,57 +228,24 @@ public class PlayingActivity extends Activity
         return false;
     }
 
-    private void calculateEngineForce() {
-
-        Coordinate F = mMachine.getSpaceShip().getEngineForce();
-        Coordinate.initializeVector(F, mShip.Position(),
-                mMachine.getSpaceShip().getEngineDirectionPoint());
-        Coordinate.normilizeVector(F);
-        mMachine.onEngineForceChanged();
-    }
-
     private void runPhxEngineTimer() {
-        /**
-         Идея:
-         пусть прошло N ms реального времени. Множитель времени - W. Значит должно пройти N*W ms
-         игрового времени. Чтобы увеличить точность, необходимо вызывать SimulationCircle в цикле
-         для отрезков времени, меньших чем N*W. Т.е. время N*W разбивается на S временных
-         отрезков, каждый из которых - T ms. Чем больше S, тем выше точность. Тогда введём
-         коэффициент точности P = S / T. Получаем систему:
-         S * T = N * W
-         S / T = P
-         , где S и T, неизвестные.
-         Число S должно быть целым, поэтому решаем относительно его, и получаем:
-         S = sqrt(N*W*P) и округляем до целого числа.
-         T = S / P
-         */
-
         final int interval = 100; // N - Период таймера (ms)
-        final double precision = 0.2; // P - эвристический коэффициент точности
 
         mPhxEvent = new TimerTask() {
             @Override
             public void run() {
-                // Рассчитываем S (circles_count):
-                int circles_count = (int)Math.sqrt(interval * mMachine.getTimeWrap() * precision);
+                // Длина интервала симуляции:
+                double time = interval * mMachine.getTimeWrap() / 1000.0;
+                // Рассчитываем количество подинтервалов, как квадратный корень от time
+                // (эвристическая зависимость)
+                int circles_count = (int)Math.sqrt(time) * 10;
                 if(circles_count == 0)
                     circles_count = 1;
-                // Рассчитываем T (circle_interval):
-                double circle_interval = circles_count / precision;
-                // Запускаем вычисление
                 Coordinate prevPosition = new Coordinate(mShip.Position());
-                // Условие вынесено из циклов ради оптимизации
-                if(mMachine.getSpaceShip().EngineIsOn()) {
-                    calculateEngineForce();
-                    Coordinate engineForce = mMachine.getSpaceShip().getEngineForce();
-                    for (int i = 0; i < circles_count; i++) {
-                        mShip.addExternalForces(engineForce);
-                        mPhxEngine.SimulationCircle(circle_interval);
-                    }
-                } else {
-                    for (int i = 0; i < circles_count; i++)
-                        mPhxEngine.SimulationCircle(circle_interval);
-                }
+
+                mPhxEngine.startSimulation(time);
+                mPhxEngine.simulationCircle(time, circles_count);
+                mPhxEngine.endSimulation(time);
 
                 mMachine.onPositionUpdate(mShip.Position());
                 if(checkForCrash())
@@ -298,6 +267,8 @@ public class PlayingActivity extends Activity
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
+                        mPgbFuel.setProgress((int)(mShip.Fuel() / mShip.MaxFuel() * 1000));
+                        mPgbFuel.invalidate();
                         mViewer.invalidate();
                     }
                 });
@@ -324,6 +295,7 @@ public class PlayingActivity extends Activity
         if(newState == PlayingMachine.stateOnLaunched) {
             // запускаем объект
             mScene.prepareToNewLaunch();
+            mShip.setFuel(mShip.MaxFuel());
             mShip.Position().setPosition(mScene.getLaunchPoint());
             mShip.Velocity().setPosition(mMachine.getLaunchVelocity());
             runPhxEngineTimer();
