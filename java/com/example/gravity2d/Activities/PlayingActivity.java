@@ -170,20 +170,25 @@ public class PlayingActivity extends Activity
     @Override // StateMachineClient
     public void onDeattached(AbstractStateMachine machine) { mMachine = null; }
 
-    private String stateAsString(long state) {
-        if(state == PlayingMachine.stateDefault)
+    private String stateAsString() {
+        long state = mMachine.getState();
+        if (state == PlayingMachine.stateDefault)
             return new String("Нажмите кнопку \"Подготовить запуск!\"");
-        if(state == PlayingMachine.statePreparation)
-            return new String("Укажите вектор скорости");
-        if(state == PlayingMachine.stateOnParamsUpdate)
-            return new String("Скорость: " + mMachine.getLaunchVelocity().length() + " км/с");
-        if(state == PlayingMachine.stateOnLaunched)
-            return new String("Объект запущен! Нажмите \"Прервать!\", чтобы прервать запуск");
-        if(state == PlayingMachine.stateOnPositionUpdate)
-            return new String("Debug: state is stateOnPositionUpdate");
+        if(mMachine.isPreparing()) {
+            if (state == PlayingMachine.statePreparation)
+                return new String("Укажите начальный вектор скорости");
+            if (state == PlayingMachine.stateOnParamsUpdate) {
+                Coordinate velocity = mMachine.getLaunchVelocity();
+                return new String("Скорость: " + velocity.length() + " км/с," +
+                        "tg(a) = " + velocity.y() / velocity.x());
+            }
+        }
+        if(mMachine.isLaunched()) {
+            return new String("Скорость: " + mShip.Velocity().length() + " км/с");
+        }
         if(state == PlayingMachine.stateOnFinished)
             return new String("Запуск завершён!");
-        return new String("Debug: wtf?!");
+        return new String("");
     }
 
     /**
@@ -269,6 +274,7 @@ public class PlayingActivity extends Activity
                     public void run() {
                         mPgbFuel.setProgress((int)(mShip.Fuel() / mShip.MaxFuel() * 1000));
                         mPgbFuel.invalidate();
+                        mStatus.setText(stateAsString());
                         mViewer.invalidate();
                     }
                 });
@@ -287,7 +293,7 @@ public class PlayingActivity extends Activity
             this.runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    mStatus.setText(stateAsString(newState));
+                    mStatus.setText(stateAsString());
                 }
             });
         }
